@@ -1,0 +1,89 @@
+import { DatabaseZap, Leaf, ShieldCheck } from 'lucide-react';
+import { motion } from 'motion/react';
+import { MetricCard } from '../components/production/MetricCard';
+import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
+import { SensorGauge } from '../components/production/SensorGauge';
+import { Hero } from '../components/ui/Hero';
+import { SectionHeader } from '../components/ui/SectionHeader';
+import { heroAssets, knowledgeArticles, sensorMetrics, weatherMetrics } from '../data/mockData';
+
+export function ProductionPage() {
+  return (
+    <>
+      <Hero
+        eyebrow="数智茶鸣｜智慧生产"
+        title="让春建茶园会感知、会预警、会生长"
+        description="以气象、传感器、图像识别和知识辅助为核心，先用 mock data 搭建可信的智慧农业展示界面，后续可逐步接入真实 API 和多模态识别能力。"
+        imageUrl={heroAssets.production}
+        primaryLabel="查看数据驾驶舱"
+        secondaryLabel="预留接口资源"
+      />
+
+      <section id="primary-section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <SectionHeader eyebrow="Weather API Slot" title="气象与茶园环境监测" description="当前使用静态模拟数据，保留天气、温湿度、降雨、风力等未来 API 字段。" />
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {weatherMetrics.map((metric) => (
+            <MetricCard key={metric.id} metric={metric} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="tech-panel rounded-[2rem] p-6 sm:p-8">
+          <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs font-bold text-tea-spring">
+                <DatabaseZap className="h-4 w-4" />
+                Sensor Mock Dashboard
+              </div>
+              <h2 className="mt-5 text-3xl font-black text-white sm:text-4xl">传感器仪表盘预留</h2>
+              <p className="mt-4 text-base leading-7 text-white/68">土壤酸碱度、湿度、冠层温度、光照强度等指标先以前端模拟展示。真实设备接入后，只需替换 `src/data/mockData.ts` 或新增接口适配层。</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {sensorMetrics.map((metric) => (
+                <SensorGauge key={metric.id} metric={metric} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        <SectionHeader eyebrow="Vision AI Slot" title="病虫害识别前端界面" description="保留图片上传、样本预览、识别结果、置信度和处置建议区域，当前使用 mock 结果模拟多模态识别流程。" />
+        <div className="mt-8">
+          <PestDetectionPanel />
+        </div>
+      </section>
+
+      <section id="resource-slots" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <SectionHeader eyebrow="Knowledge Base Slot" title="农业知识辅助内容位" description="为后续 RAG 知识库、农技手册和种植建议预留结构化内容模块。" />
+        <div className="mt-8 grid gap-5 md:grid-cols-3">
+          {knowledgeArticles.map((article, index) => (
+            <motion.article
+              key={article.id}
+              initial={{ opacity: 0, y: 18 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.42, delay: index * 0.06 }}
+              className="rounded-3xl bg-white p-6 shadow-sm"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-tea-mist text-tea-leaf">
+                {index === 0 ? <Leaf className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+              </div>
+              <p className="mt-5 text-sm font-bold text-tea-leaf">{article.category}</p>
+              <h3 className="mt-2 text-xl font-black text-tea-ink">{article.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-tea-ink/66">{article.summary}</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {article.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-tea-mist px-3 py-1 text-xs font-bold text-tea-ink/58">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </motion.article>
+          ))}
+        </div>
+      </section>
+    </>
+  );
+}

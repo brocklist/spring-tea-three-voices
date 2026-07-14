@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: Inter, system-ui, "Microsoft YaHei UI", sans-serif;
+  background: #f7fbf3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(31, 122, 77, 0.22);
+}
+
+.glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 24px 80px rgba(16, 37, 31, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.tech-panel {
+  border: 1px solid rgba(141, 207, 118, 0.24);
+  background:
+    radial-gradient(circle at top left, rgba(97, 179, 199, 0.18), transparent 38%),
+    linear-gradient(135deg, rgba(13, 43, 37, 0.94), rgba(17, 71, 49, 0.9));
+  box-shadow: 0 24px 80px rgba(16, 37, 31, 0.24);
+}
+
+.asset-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, rgba(237, 247, 239, 0.9), rgba(216, 169, 79, 0.16));
+}
+
+.asset-frame::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 58%, rgba(16, 37, 31, 0.46));
+}
