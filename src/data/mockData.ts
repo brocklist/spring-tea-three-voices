@@ -69,7 +69,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'lychee-longjing-cider',
     name: '荔枝龙井西打酒',
     grade: '2025 旅游商品铜奖',
-    imageUrl: '/assets/products/荔枝龙井西打酒.webp',
+    imageUrl: '/assets/products/lychee-longjing-cider.webp',
     intro:
       '融合荔枝与龙井：荔枝的甜对应郁达夫笔下柔情，龙井的清冽代表文人风骨，气泡如同友人谈笑时光。',
     spec: '文创饮品 / 果香气泡 / 微醺茶酒',
@@ -81,7 +81,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'xiaoguan-tea-gift-box',
     name: '小罐茶礼盒',
     grade: '达夫的朋友们 IP 系列',
-    imageUrl: '/assets/products/小罐茶礼盒.webp',
+    imageUrl: '/assets/products/xiaoguan-tea-gift-box.webp',
     intro:
       '采用创新理念整合国内茶行业优质资源，坚持原产地原料、大师工艺、大师监制，并以小罐保鲜技术呈现茶礼质感。',
     spec: '茶礼盒 / 小罐保鲜 / 大师监制',
@@ -93,7 +93,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'osmanthus-longjing-tea',
     name: '桂花龙井茶叶',
     grade: '杭州双物产融合',
-    imageUrl: '/assets/products/桂花龙井茶叶.webp',
+    imageUrl: '/assets/products/osmanthus-longjing-tea.webp',
     intro:
       '融合杭州金桂与龙井，桂花香甜包裹龙井鲜醇，花香与茶韵相融，带来穿越古今的味觉体验。',
     spec: '桂花龙井 / 花香茶韵 / 茶叶产品',
@@ -105,7 +105,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'longjing-steam-eye-mask',
     name: '龙井茶香蒸汽热敷眼罩',
     grade: '茶旅融合生活文创',
-    imageUrl: '/assets/products/龙井茶香蒸汽热敷眼罩.webp',
+    imageUrl: '/assets/products/longjing-steam-eye-mask.webp',
     intro:
       '把龙井茶天然精粹融入日用产品，以温润蒸汽缓解眼部疲劳，茶香安神舒缓，延展富春山水与茶文化氛围。',
     spec: '蒸汽热敷 / 龙井茶香 / 日用文创',
