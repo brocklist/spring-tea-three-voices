@@ -7,7 +7,7 @@ interface MatchResultCardProps {
 
 export function MatchResultCard({ result }: MatchResultCardProps) {
   return (
-    <article className="rounded-3xl bg-white p-6 shadow-sm">
+    <article className="tea-card rounded-3xl p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-tea-spring/18 px-3 py-1 text-xs font-black text-tea-leaf">
@@ -30,7 +30,7 @@ export function MatchResultCard({ result }: MatchResultCardProps) {
           </span>
         ))}
       </div>
-      <div className="mt-5 grid gap-3 rounded-2xl bg-[#f7fbf3] p-4 text-sm leading-6 text-tea-ink/66 sm:grid-cols-2">
+      <div className="tea-footer mt-5 grid gap-3 rounded-2xl p-4 text-sm leading-6 text-tea-ink/66 sm:grid-cols-2">
         <p>
           <Link2 className="mr-2 inline h-4 w-4 text-tea-leaf" />
           项目需求：{result.project.requiredResources}

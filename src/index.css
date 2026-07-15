@@ -65,3 +65,32 @@ select {
   pointer-events: none;
   background: linear-gradient(180deg, transparent 58%, rgba(16, 37, 31, 0.46));
 }
+
+.section-shell {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .section-shell {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-shell {
+    padding-inline: 2rem;
+  }
+}
+
+.tea-card {
+  border: 1px solid rgba(16, 37, 31, 0.07);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(250, 253, 247, 0.96));
+  box-shadow: 0 18px 60px rgba(16, 37, 31, 0.08);
+}
+
+.tea-footer {
+  border-top: 1px solid rgba(31, 122, 77, 0.1);
+  background: linear-gradient(135deg, rgba(237, 247, 239, 0.96), rgba(255, 255, 255, 0.92));
+}

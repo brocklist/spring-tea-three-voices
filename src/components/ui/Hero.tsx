@@ -17,7 +17,7 @@ export function Hero({ eyebrow, title, description, imageUrl, primaryLabel, seco
         <img src={imageUrl} alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-br from-tea-ink/88 via-tea-ink/58 to-tea-leaf/36" />
       </div>
-      <div className="relative mx-auto grid min-h-[540px] max-w-7xl items-end gap-8 px-4 pb-14 pt-24 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+      <div className="relative mx-auto grid min-h-[560px] max-w-7xl items-end gap-8 px-4 pb-16 pt-24 sm:px-6 lg:grid-cols-[1.08fr_0.92fr] lg:px-8">
         <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55 }}>
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur">
             <span className="h-2 w-2 rounded-full bg-tea-spring" />
@@ -44,7 +44,7 @@ export function Hero({ eyebrow, title, description, imageUrl, primaryLabel, seco
         >
           <div className="grid grid-cols-3 gap-3 text-center">
             {['智慧监测', '茶品传播', '校企共创'].map((item, index) => (
-              <div key={item} className="rounded-2xl bg-white/70 p-4">
+              <div key={item} className="rounded-2xl border border-white/50 bg-white/78 p-4">
                 <div className="text-2xl font-black text-tea-leaf">0{index + 1}</div>
                 <div className="mt-1 text-xs font-bold text-tea-ink/64">{item}</div>
               </div>

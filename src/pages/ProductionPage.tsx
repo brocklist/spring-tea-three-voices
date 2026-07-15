@@ -25,9 +25,9 @@ export function ProductionPage() {
         secondaryLabel="进入智能识别"
       />
 
-      <section id="primary-section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[0.86fr_1.14fr]">
-          <div className="rounded-[2rem] bg-white p-6 shadow-soft">
+      <section id="primary-section" className="section-shell py-16">
+        <div className="grid gap-8 xl:grid-cols-[0.78fr_1.22fr]">
+          <div className="tea-card rounded-[2rem] p-6 lg:p-7">
             <div className="inline-flex items-center gap-2 rounded-full bg-tea-mist px-3 py-1 text-xs font-black text-tea-leaf">
               <Waves className="h-3.5 w-3.5" />
               春建茶园态势
@@ -40,7 +40,7 @@ export function ProductionPage() {
               {operationHighlights.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <div key={item.label} className="flex items-center gap-4 rounded-2xl bg-[#f7fbf3] p-4">
+                  <div key={item.label} className="tea-footer flex items-center gap-4 rounded-2xl p-4">
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-tea-leaf shadow-sm">
                       <Icon className="h-5 w-5" />
                     </span>
@@ -61,7 +61,7 @@ export function ProductionPage() {
               title="气象与茶园环境监测"
               description="天气、温湿度、降雨与风力数据集中展示，为采摘排班、病害预防和无人机巡田提供判断依据。"
             />
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {weatherMetrics.map((metric) => (
                 <MetricCard key={metric.id} metric={metric} />
               ))}
@@ -70,8 +70,8 @@ export function ProductionPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="tech-panel overflow-hidden rounded-[2rem] p-6 sm:p-8">
+      <section className="section-shell pb-16">
+        <div className="tech-panel overflow-hidden rounded-[2rem] p-6 sm:p-8 lg:p-9">
           <div className="pointer-events-none absolute" />
           <div className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr]">
             <div>
@@ -105,7 +105,7 @@ export function ProductionPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+      <section className="section-shell pb-16">
         <SectionHeader
           eyebrow="Leaf Health"
           title="叶片健康识别"
@@ -116,7 +116,7 @@ export function ProductionPage() {
         </div>
       </section>
 
-      <section id="resource-slots" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+      <section id="resource-slots" className="section-shell pb-20">
         <SectionHeader
           eyebrow="Agronomy Guide"
           title="农业知识辅助"

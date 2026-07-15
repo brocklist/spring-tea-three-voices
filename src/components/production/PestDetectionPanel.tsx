@@ -35,7 +35,7 @@ export function PestDetectionPanel() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-      <div className="rounded-3xl border border-tea-leaf/12 bg-white p-5 shadow-sm">
+      <div className="tea-card rounded-3xl p-5">
         <label className="flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-2xl bg-gradient-to-br from-tea-mist to-white p-6 text-center transition hover:from-tea-spring/18 hover:to-white">
           {previewUrl ? (
             <img src={previewUrl} alt="待识别茶叶样本" className="h-56 w-full rounded-xl object-cover" />
@@ -67,7 +67,7 @@ export function PestDetectionPanel() {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-white p-6 shadow-soft">
+      <div className="tea-card rounded-3xl p-6">
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-sm font-bold text-tea-leaf">识别结果</p>
@@ -84,14 +84,14 @@ export function PestDetectionPanel() {
         </div>
 
         <div className="mt-6 space-y-4">
-          <div className="rounded-2xl bg-tea-mist/70 p-4">
+          <div className="tea-footer rounded-2xl p-4">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-tea-leaf">说明</p>
             <p className="mt-2 text-sm leading-6 text-tea-ink/70">
               {result?.summary ?? '上传样本后，将在这里展示叶片健康判断、风险类型和简要依据。'}
             </p>
           </div>
-          <div className="rounded-2xl bg-[#fff7e6] p-4">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-tea-clay">建议处理方式</p>
+          <div className="tea-footer rounded-2xl p-4">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-tea-leaf">建议处理方式</p>
             <p className="mt-2 text-sm leading-6 text-tea-ink/70">
               {result?.suggestion ?? '识别完成后，将给出巡园复核、通风排湿、隔离观察等处理建议。'}
             </p>

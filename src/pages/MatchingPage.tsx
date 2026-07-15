@@ -134,7 +134,7 @@ export function MatchingPage() {
         secondaryLabel="查看匹配结果"
       />
 
-      <section id="primary-section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section id="primary-section" className="section-shell py-16">
         <SectionHeader
           eyebrow="Submission Hub"
           title="双向发布入口"
@@ -250,7 +250,7 @@ function LaunchCard({
   onClick: () => void;
 }) {
   return (
-    <article className="rounded-3xl bg-white p-6 shadow-soft">
+    <article className="tea-card rounded-3xl p-6">
       <div className="flex items-start justify-between gap-4">
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-tea-mist text-tea-leaf">{icon}</span>
         <span className="rounded-full bg-tea-spring/18 px-3 py-1 text-xs font-black text-tea-leaf">{meta}</span>
@@ -260,7 +260,7 @@ function LaunchCard({
       <button
         type="button"
         onClick={onClick}
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-tea-ink px-5 py-3 text-sm font-bold text-white transition hover:bg-tea-leaf"
+        className="tea-footer mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-bold text-tea-ink transition hover:bg-tea-mist"
       >
         {actionLabel}
         <ArrowRight className="h-4 w-4" />
@@ -323,7 +323,7 @@ function DialogWindow({
 
 function DialogActions({ onCancel, submitLabel }: { onCancel: () => void; submitLabel: string }) {
   return (
-    <div className="mt-7 flex flex-col-reverse gap-3 border-t border-tea-ink/8 pt-5 sm:flex-row sm:justify-end">
+    <div className="tea-footer -mx-5 -mb-5 mt-7 flex flex-col-reverse gap-3 rounded-b-[2rem] px-5 py-5 sm:-mx-7 sm:-mb-7 sm:flex-row sm:justify-end sm:px-7">
       <button
         type="button"
         onClick={onCancel}
@@ -411,7 +411,7 @@ function FileSlot({ label, fileName, onChange }: { label: string; fileName?: str
 
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return (
-    <div className="rounded-3xl bg-[#f7fbf3] p-6">
+    <div className="tea-footer rounded-3xl p-6">
       <div className="flex items-center justify-between">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-tea-leaf">{icon}</span>
         <span className="text-3xl font-black text-tea-ink">{value}</span>

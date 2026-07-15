@@ -17,9 +17,9 @@ export function MetricCard({ metric }: MetricCardProps) {
   const Icon = iconMap[metric.id as keyof typeof iconMap] ?? Activity;
 
   return (
-    <article className="rounded-2xl border border-tea-ink/8 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-soft">
+    <article className="tea-card h-full rounded-2xl p-5 transition hover:-translate-y-1 hover:shadow-soft">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-tea-mist text-tea-leaf">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-tea-mist text-tea-leaf shadow-sm">
           <Icon className="h-5 w-5" />
         </div>
         <span className="rounded-full bg-tea-spring/18 px-3 py-1 text-xs font-bold text-tea-leaf">{metric.updatedAt}</span>

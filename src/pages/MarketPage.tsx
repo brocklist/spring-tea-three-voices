@@ -17,7 +17,7 @@ export function MarketPage() {
         secondaryLabel="查看茶文化内容"
       />
 
-      <section id="primary-section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section id="primary-section" className="section-shell py-16">
         <SectionHeader eyebrow="Product Showcase" title="茶叶与衍生产品展示" description="集中呈现产品图片、介绍、规格、标签和咨询入口，让春建茶香以更完整的品牌面貌触达消费者。" />
         <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {teaProducts.map((product) => (
@@ -27,7 +27,7 @@ export function MarketPage() {
       </section>
 
       <section className="bg-white py-16">
-        <div id="market-action-placeholders" className="mx-auto grid max-w-7xl scroll-mt-24 gap-10 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+        <div id="market-action-placeholders" className="section-shell grid scroll-mt-24 gap-10 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <SectionHeader eyebrow="Brand Story" title="春建乡茶品牌故事" description="以春建乡茶园历史、共富工坊、大学生实践和茶农故事串联产品价值与乡村振兴叙事。" />
             <div className="mt-8 rounded-3xl bg-tea-mist p-6">
@@ -54,7 +54,7 @@ export function MarketPage() {
         </div>
       </section>
 
-      <section id="resource-slots" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+      <section id="resource-slots" className="section-shell py-16">
         <SectionHeader eyebrow="Tea Culture Media" title="视频与茶文化资源" description="以茶园影像、制茶工艺和茶文化图文内容增强产品记忆点。" />
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {mediaAssets.map((asset) => (
@@ -63,13 +63,15 @@ export function MarketPage() {
                 <img src={asset.coverUrl} alt={asset.title} className="h-full w-full object-cover" />
                 <div className="absolute left-4 top-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/86 px-3 py-1 text-xs font-black text-tea-ink backdrop-blur">
                   {asset.type === 'video' ? <Film className="h-3.5 w-3.5" /> : <ImageIcon className="h-3.5 w-3.5" />}
-                  {asset.type === 'video' ? 'Video URL' : 'Image URL'}
+                  {asset.type === 'video' ? '茶园视频' : '图文素材'}
                 </div>
               </div>
               <div className="p-6">
                 <h3 className="text-xl font-black text-tea-ink">{asset.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-tea-ink/64">{asset.description}</p>
-                <code className="mt-4 block truncate rounded-xl bg-tea-mist px-3 py-2 text-xs font-semibold text-tea-ink/58">{asset.url}</code>
+                <div className="tea-footer mt-5 rounded-2xl px-4 py-3 text-sm font-bold text-tea-leaf">
+                  {asset.type === 'video' ? '适合承载茶园航拍与制茶过程' : '适合承载品牌故事与茶文化传播'}
+                </div>
               </div>
             </article>
           ))}
