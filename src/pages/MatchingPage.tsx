@@ -128,7 +128,7 @@ export function MatchingPage() {
       <Hero
         eyebrow="新苗创鸣｜校企双选"
         title="让创业新苗找到真正适配的茶园土壤"
-        description="以大学生创业计划、茶园资源发布和标签匹配为核心，先以前端本地存储完成交互闭环，后续可升级为审核、消息和真实推荐系统。"
+        description="以大学生创业计划、茶园资源发布和标签匹配为核心，连接青年创意与乡村茶园资源。"
         imageUrl={heroAssets.matching}
         primaryLabel="打开发布窗口"
         secondaryLabel="查看匹配结果"
@@ -138,14 +138,14 @@ export function MatchingPage() {
         <SectionHeader
           eyebrow="Submission Hub"
           title="双向发布入口"
-          description="提交表单已收纳到二级窗口中，页面先展示入口与状态；点击后再填写创业计划或茶园资源信息。"
+          description="页面展示双向发布入口与资源状态，点击后进入独立窗口填写创业计划或茶园资源信息。"
         />
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <LaunchCard
             icon={<Users className="h-6 w-6" />}
             title="大学生创业计划"
-            description="上传项目名称、团队介绍、所需资源、合作方式和附件占位，由系统与茶园资源做标签匹配。"
+            description="提交项目名称、团队介绍、所需资源与合作方式，由系统与茶园资源做标签匹配。"
             meta={`${projects.length} 份计划已在资源池`}
             actionLabel="提交创业计划"
             onClick={() => setActiveDialog('project')}
@@ -153,7 +153,7 @@ export function MatchingPage() {
           <LaunchCard
             icon={<Building2 className="h-6 w-6" />}
             title="茶园资源发布"
-            description="发布茶园场地、支持方向、合作条件和图片视频占位，方便创业团队快速理解可合作资源。"
+            description="发布茶园场地、支持方向与合作条件，方便创业团队快速理解可合作资源。"
             meta={`${gardens.length} 个茶园资源已入库`}
             actionLabel="发布茶园资源"
             onClick={() => setActiveDialog('garden')}
@@ -188,7 +188,7 @@ export function MatchingPage() {
       <DialogWindow
         open={activeDialog === 'project'}
         title="大学生创业计划提交"
-        description="填写后会保存到浏览器本地数据池，并立即参与标签匹配。附件当前只记录文件名。"
+        description="填写后将进入项目资源池，并立即参与标签匹配。"
         onClose={() => setActiveDialog(null)}
       >
         <form onSubmit={submitProject}>
@@ -199,7 +199,7 @@ export function MatchingPage() {
           <Field label="所需资源" textarea value={projectForm.requiredResources} onChange={(value) => setProjectForm({ ...projectForm, requiredResources: value })} />
           <Field label="预期合作方式" value={projectForm.cooperationMode} onChange={(value) => setProjectForm({ ...projectForm, cooperationMode: value })} />
           <Field label="联系方式" value={projectForm.contact} onChange={(value) => setProjectForm({ ...projectForm, contact: value })} />
-          <FileSlot label="附件或图片上传占位" fileName={projectForm.attachmentName} onChange={(fileName) => setProjectForm({ ...projectForm, attachmentName: fileName })} />
+          <FileSlot label="附件或图片材料" fileName={projectForm.attachmentName} onChange={(fileName) => setProjectForm({ ...projectForm, attachmentName: fileName })} />
           <div className="mt-5">
             <Label>匹配标签</Label>
             <TagPicker tags={matchTags} selectedTags={projectForm.tags} onChange={(tags) => setProjectForm({ ...projectForm, tags })} />
@@ -211,7 +211,7 @@ export function MatchingPage() {
       <DialogWindow
         open={activeDialog === 'garden'}
         title="茶园资源发布"
-        description="填写后会保存到浏览器本地数据池，并立即与创业计划进行标签匹配。图片或视频当前只记录文件名。"
+        description="填写后将进入茶园资源池，并立即与创业计划进行标签匹配。"
         onClose={() => setActiveDialog(null)}
       >
         <form onSubmit={submitGarden}>
@@ -222,7 +222,7 @@ export function MatchingPage() {
           <Field label="可支持的创业方向" value={gardenForm.supportedDirections} onChange={(value) => setGardenForm({ ...gardenForm, supportedDirections: value })} />
           <Field label="合作条件" textarea value={gardenForm.cooperationTerms} onChange={(value) => setGardenForm({ ...gardenForm, cooperationTerms: value })} />
           <Field label="联系方式" value={gardenForm.contact} onChange={(value) => setGardenForm({ ...gardenForm, contact: value })} />
-          <FileSlot label="图片或视频资料占位" fileName={gardenForm.mediaName} onChange={(fileName) => setGardenForm({ ...gardenForm, mediaName: fileName })} />
+          <FileSlot label="图片或视频资料" fileName={gardenForm.mediaName} onChange={(fileName) => setGardenForm({ ...gardenForm, mediaName: fileName })} />
           <div className="mt-5">
             <Label>资源标签</Label>
             <TagPicker tags={matchTags} selectedTags={gardenForm.tags} onChange={(tags) => setGardenForm({ ...gardenForm, tags })} />
@@ -401,7 +401,7 @@ function FileSlot({ label, fileName, onChange }: { label: string; fileName?: str
         htmlFor={inputId}
         className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-tea-leaf/28 bg-tea-mist/70 px-4 py-3 text-sm font-semibold text-tea-ink/62 transition hover:bg-tea-mist"
       >
-        <span className="truncate">{fileName ?? '选择文件，仅记录文件名'}</span>
+        <span className="truncate">{fileName ?? '选择文件'}</span>
         <FileUp className="h-4 w-4 shrink-0 text-tea-leaf" />
         <input id={inputId} className="sr-only" type="file" onChange={(event) => onChange(event.target.files?.[0]?.name ?? '')} />
       </label>

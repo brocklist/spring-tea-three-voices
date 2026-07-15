@@ -43,7 +43,7 @@ export function Hero({ eyebrow, title, description, imageUrl, primaryLabel, seco
           className="glass-panel rounded-3xl p-5"
         >
           <div className="grid grid-cols-3 gap-3 text-center">
-            {['数据监测', '资源占位', '轻量匹配'].map((item, index) => (
+            {['智慧监测', '茶品传播', '校企共创'].map((item, index) => (
               <div key={item} className="rounded-2xl bg-white/70 p-4">
                 <div className="text-2xl font-black text-tea-leaf">0{index + 1}</div>
                 <div className="mt-1 text-xs font-bold text-tea-ink/64">{item}</div>

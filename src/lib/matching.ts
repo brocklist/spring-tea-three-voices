@@ -16,7 +16,7 @@ export function buildMatchResults(projects: StudentProject[], gardens: TeaGarden
           reason:
             matchedTags.length > 0
               ? `双方在 ${matchedTags.join('、')} 方向上高度重合，适合进入方案沟通。`
-              : '当前标签重合较少，可作为后续资源池观察对象。',
+              : '双方标签重合较少，可作为资源池观察对象。',
         };
       }),
     )

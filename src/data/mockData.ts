@@ -74,7 +74,7 @@ export const teaProducts: TeaProduct[] = [
       '融合荔枝与龙井：荔枝的甜对应郁达夫笔下柔情，龙井的清冽代表文人风骨，气泡如同友人谈笑时光。',
     spec: '文创饮品 / 果香气泡 / 微醺茶酒',
     tags: ['获奖商品', '郁达夫 IP', '助农文创'],
-    actionLabel: '预留咨询入口',
+    actionLabel: '咨询合作',
     actionUrl: '#market-action-placeholders',
   },
   {
@@ -86,7 +86,7 @@ export const teaProducts: TeaProduct[] = [
       '采用创新理念整合国内茶行业优质资源，坚持原产地原料、大师工艺、大师监制，并以小罐保鲜技术呈现茶礼质感。',
     spec: '茶礼盒 / 小罐保鲜 / 大师监制',
     tags: ['礼盒', '原产地原料', '大师工艺'],
-    actionLabel: '预留购买按钮',
+    actionLabel: '了解购买',
     actionUrl: '#market-action-placeholders',
   },
   {
@@ -98,7 +98,7 @@ export const teaProducts: TeaProduct[] = [
       '融合杭州金桂与龙井，桂花香甜包裹龙井鲜醇，花香与茶韵相融，带来穿越古今的味觉体验。',
     spec: '桂花龙井 / 花香茶韵 / 茶叶产品',
     tags: ['桂花', '龙井', '茶文化'],
-    actionLabel: '预留咨询入口',
+    actionLabel: '咨询合作',
     actionUrl: '#market-action-placeholders',
   },
   {
@@ -110,7 +110,7 @@ export const teaProducts: TeaProduct[] = [
       '把龙井茶天然精粹融入日用产品，以温润蒸汽缓解眼部疲劳，茶香安神舒缓，延展富春山水与茶文化氛围。',
     spec: '蒸汽热敷 / 龙井茶香 / 日用文创',
     tags: ['生活文创', '茶旅融合', '舒缓体验'],
-    actionLabel: '预留购买按钮',
+    actionLabel: '了解购买',
     actionUrl: '#market-action-placeholders',
   },
 ];
@@ -119,15 +119,15 @@ export const mediaAssets: MediaAsset[] = [
   {
     id: 'drone',
     type: 'video',
-    title: '茶园航拍视频位',
+    title: '茶园航拍影像',
     coverUrl: 'https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=1200&q=82',
     url: '/assets/placeholders/chunjian-drone.mp4',
-    description: '预留春建乡茶园航拍、晨雾、采茶队伍等视频素材。',
+    description: '呈现春建乡茶园航拍、晨雾与采茶队伍等影像素材。',
   },
   {
     id: 'craft',
     type: 'image',
-    title: '手工制茶图文位',
+    title: '手工制茶图文',
     coverUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=82',
     url: '/assets/placeholders/tea-craft.jpg',
     description: '展示摊青、杀青、揉捻、干燥等工序，可替换为真实素材。',
@@ -135,10 +135,10 @@ export const mediaAssets: MediaAsset[] = [
   {
     id: 'culture',
     type: 'image',
-    title: '茶文化传播素材位',
+    title: '茶文化传播素材',
     coverUrl: 'https://images.unsplash.com/photo-1523920290228-4f321a939b4c?auto=format&fit=crop&w=1200&q=82',
     url: '/assets/placeholders/tea-culture.jpg',
-    description: '预留品牌故事、节庆活动、非遗体验和茶席影像。',
+    description: '串联品牌故事、节庆活动、非遗体验和茶席影像。',
   },
 ];
 

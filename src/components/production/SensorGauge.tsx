@@ -10,7 +10,7 @@ export function SensorGauge({ metric }: SensorGaugeProps) {
   const TrendIcon = metric.trend === 'up' ? ArrowUp : metric.trend === 'down' ? ArrowDown : ArrowRight;
 
   return (
-    <article className="rounded-2xl border border-white/10 bg-white/8 p-5 text-white">
+    <article className="rounded-2xl border border-white/10 bg-white/8 p-5 text-white transition hover:bg-white/12">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-white/70">{metric.label}</h3>
         <TrendIcon className="h-4 w-4 text-tea-spring" />
@@ -22,7 +22,7 @@ export function SensorGauge({ metric }: SensorGaugeProps) {
       <div className="mt-5 h-2 rounded-full bg-white/12">
         <div className="h-2 rounded-full bg-gradient-to-r from-tea-sky via-tea-spring to-tea-gold" style={{ width: `${percent}%` }} />
       </div>
-      <p className="mt-3 text-xs font-semibold text-white/54">建议区间：{metric.range}</p>
+      <p className="mt-3 text-xs font-semibold text-white/54">适宜区间：{metric.range}</p>
     </article>
   );
 }
