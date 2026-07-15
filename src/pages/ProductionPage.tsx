@@ -13,7 +13,30 @@ const operationHighlights = [
   { label: '综合生长态势', value: '良好', note: '春梢长势稳定', icon: Activity },
 ];
 
-export function ProductionPage() {
+interface ProductionPageProps {
+  careMode?: boolean;
+}
+
+const elderPlantingTips = [
+  {
+    title: '今天适合做什么',
+    body: '上午天气较稳，适合采摘、巡园和查看新梢长势。下午如果湿度升高，优先做好通风排湿。',
+  },
+  {
+    title: '重点看哪里',
+    body: '先看叶片背面和茶垄低洼处，发现褐斑、卷叶或虫咬痕迹时，及时记录并隔离观察。',
+  },
+  {
+    title: '浇水与施肥',
+    body: '土壤湿度处在适宜范围，今天不建议大量补水。春梢生长期可少量多次补充有机肥。',
+  },
+];
+
+export function ProductionPage({ careMode = false }: ProductionPageProps) {
+  if (careMode) {
+    return <ElderCareProductionPage />;
+  }
+
   return (
     <>
       <Hero
@@ -150,5 +173,82 @@ export function ProductionPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function ElderCareProductionPage() {
+  return (
+    <div className="bg-[#f7fbf3]">
+      <section className="relative overflow-hidden bg-tea-ink">
+        <div className="absolute inset-0">
+          <img src={heroAssets.production} alt="" className="h-full w-full object-cover opacity-42" />
+          <div className="absolute inset-0 bg-gradient-to-br from-tea-ink via-tea-ink/86 to-tea-leaf/72" />
+        </div>
+        <div className="section-shell relative py-14 sm:py-20">
+          <div className="max-w-4xl">
+            <div className="inline-flex rounded-full bg-white/14 px-5 py-2 text-xl font-black text-white backdrop-blur">
+              老年关怀模式
+            </div>
+            <h1 className="mt-6 text-4xl font-black leading-tight text-white sm:text-6xl">春建茶园今日信息</h1>
+            <p className="mt-5 max-w-3xl text-2xl font-semibold leading-relaxed text-white/82">
+              只保留天气、种植建议和巡园提醒。字体更大，信息更少，方便快速查看。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="primary-section" className="section-shell py-10 sm:py-14">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {weatherMetrics.map((metric) => (
+            <article key={metric.id} className="tea-card rounded-[1.75rem] p-6">
+              <p className="text-2xl font-black text-tea-leaf">{metric.label}</p>
+              <div className="mt-4 flex items-end gap-2">
+                <span className="text-5xl font-black text-tea-ink">{metric.value}</span>
+                {metric.unit ? <span className="pb-2 text-2xl font-black text-tea-ink/62">{metric.unit}</span> : null}
+              </div>
+              <div className="tea-footer mt-5 rounded-2xl px-5 py-4">
+                <p className="text-xl font-bold leading-relaxed text-tea-ink">{metric.status}</p>
+                <p className="mt-1 text-lg font-semibold text-tea-ink/58">更新时间：{metric.updatedAt}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-shell pb-14">
+        <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <article className="tea-card rounded-[2rem] p-7">
+            <h2 className="text-4xl font-black text-tea-ink">今日种植提醒</h2>
+            <div className="mt-6 grid gap-4">
+              {elderPlantingTips.map((tip) => (
+                <div key={tip.title} className="tea-footer rounded-3xl p-5">
+                  <h3 className="text-2xl font-black text-tea-leaf">{tip.title}</h3>
+                  <p className="mt-3 text-2xl font-semibold leading-relaxed text-tea-ink/78">{tip.body}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="tech-panel rounded-[2rem] p-7">
+            <h2 className="text-4xl font-black text-white">茶园环境</h2>
+            <p className="mt-4 text-2xl font-semibold leading-relaxed text-white/76">
+              下面几个数字用于判断茶树是否舒服。保持土壤微酸、湿度适中、光照不过强，春梢长势会更稳定。
+            </p>
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
+              {sensorMetrics.slice(0, 4).map((metric) => (
+                <div key={metric.id} className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white">
+                  <p className="text-xl font-bold text-white/70">{metric.label}</p>
+                  <p className="mt-3 text-5xl font-black">
+                    {metric.value}
+                    <span className="ml-1 text-2xl text-white/62">{metric.unit}</span>
+                  </p>
+                  <p className="mt-4 text-xl font-semibold text-tea-spring">适宜区间：{metric.range}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
   );
 }

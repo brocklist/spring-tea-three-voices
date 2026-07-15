@@ -94,3 +94,7 @@ select {
   border-top: 1px solid rgba(31, 122, 77, 0.1);
   background: linear-gradient(135deg, rgba(237, 247, 239, 0.96), rgba(255, 255, 255, 0.92));
 }
+
+.elder-care-mode {
+  font-size: 18px;
+}
