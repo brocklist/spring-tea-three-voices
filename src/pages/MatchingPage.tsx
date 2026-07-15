@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useId, useMemo, useState } from 'react';
-import { BriefcaseBusiness, Building2, FileUp, Users } from 'lucide-react';
+import { FormEvent, ReactNode, useEffect, useId, useMemo, useState } from 'react';
+import { ArrowRight, BriefcaseBusiness, Building2, FileUp, Sprout, Users, X } from 'lucide-react';
 import { Hero } from '../components/ui/Hero';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { MatchResultCard } from '../components/matching/MatchResultCard';
@@ -34,6 +34,8 @@ interface GardenFormState {
   mediaName?: string;
 }
 
+type DialogType = 'project' | 'garden' | null;
+
 const emptyProjectForm: ProjectFormState = {
   projectName: '',
   teamIntro: '',
@@ -59,9 +61,31 @@ export function MatchingPage() {
   const [gardens, setGardens] = useState<TeaGardenResource[]>(() => readStorage(GARDENS_KEY, defaultGardenResources));
   const [projectForm, setProjectForm] = useState<ProjectFormState>(emptyProjectForm);
   const [gardenForm, setGardenForm] = useState<GardenFormState>(emptyGardenForm);
+  const [activeDialog, setActiveDialog] = useState<DialogType>(null);
 
   useEffect(() => writeStorage(PROJECTS_KEY, projects), [projects]);
   useEffect(() => writeStorage(GARDENS_KEY, gardens), [gardens]);
+
+  useEffect(() => {
+    if (!activeDialog) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setActiveDialog(null);
+      }
+    }
+
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [activeDialog]);
 
   const matchResults = useMemo(() => buildMatchResults(projects, gardens), [projects, gardens]);
 
@@ -79,6 +103,7 @@ export function MatchingPage() {
 
     setProjects((items) => [nextProject, ...items]);
     setProjectForm(emptyProjectForm);
+    setActiveDialog(null);
   }
 
   function submitGarden(event: FormEvent<HTMLFormElement>) {
@@ -95,6 +120,7 @@ export function MatchingPage() {
 
     setGardens((items) => [nextGarden, ...items]);
     setGardenForm(emptyGardenForm);
+    setActiveDialog(null);
   }
 
   return (
@@ -104,54 +130,44 @@ export function MatchingPage() {
         title="让创业新苗找到真正适配的茶园土壤"
         description="以大学生创业计划、茶园资源发布和标签匹配为核心，先以前端本地存储完成交互闭环，后续可升级为审核、消息和真实推荐系统。"
         imageUrl={heroAssets.matching}
-        primaryLabel="提交双选信息"
+        primaryLabel="打开发布窗口"
         secondaryLabel="查看匹配结果"
       />
 
       <section id="primary-section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <SectionHeader eyebrow="Submission Forms" title="双向发布与本地保存" description="当前提交内容保存到浏览器 LocalStorage，附件和图片只记录文件名，为后续真实上传接口预留。" />
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <form onSubmit={submitProject} className="rounded-3xl bg-white p-6 shadow-soft">
-            <FormTitle icon={<Users className="h-5 w-5" />} title="大学生创业计划提交" />
-            <Field label="项目名称" value={projectForm.projectName} onChange={(value) => setProjectForm({ ...projectForm, projectName: value })} />
-            <Field label="团队介绍" textarea value={projectForm.teamIntro} onChange={(value) => setProjectForm({ ...projectForm, teamIntro: value })} />
-            <Field label="创业方向" value={projectForm.direction} onChange={(value) => setProjectForm({ ...projectForm, direction: value })} />
-            <Field label="所需资源" textarea value={projectForm.requiredResources} onChange={(value) => setProjectForm({ ...projectForm, requiredResources: value })} />
-            <Field label="预期合作方式" value={projectForm.cooperationMode} onChange={(value) => setProjectForm({ ...projectForm, cooperationMode: value })} />
-            <Field label="联系方式" value={projectForm.contact} onChange={(value) => setProjectForm({ ...projectForm, contact: value })} />
-            <FileSlot label="附件或图片上传占位" fileName={projectForm.attachmentName} onChange={(fileName) => setProjectForm({ ...projectForm, attachmentName: fileName })} />
-            <div className="mt-5">
-              <Label>匹配标签</Label>
-              <TagPicker tags={matchTags} selectedTags={projectForm.tags} onChange={(tags) => setProjectForm({ ...projectForm, tags })} />
-            </div>
-            <button type="submit" className="mt-6 w-full rounded-full bg-tea-ink px-5 py-3 text-sm font-bold text-white transition hover:bg-tea-leaf">
-              保存创业计划
-            </button>
-          </form>
+        <SectionHeader
+          eyebrow="Submission Hub"
+          title="双向发布入口"
+          description="提交表单已收纳到二级窗口中，页面先展示入口与状态；点击后再填写创业计划或茶园资源信息。"
+        />
 
-          <form onSubmit={submitGarden} className="rounded-3xl bg-white p-6 shadow-soft">
-            <FormTitle icon={<Building2 className="h-5 w-5" />} title="茶园资源发布" />
-            <Field label="茶园名称" value={gardenForm.gardenName} onChange={(value) => setGardenForm({ ...gardenForm, gardenName: value })} />
-            <Field label="地理位置" value={gardenForm.location} onChange={(value) => setGardenForm({ ...gardenForm, location: value })} />
-            <Field label="可提供资源" textarea value={gardenForm.resources} onChange={(value) => setGardenForm({ ...gardenForm, resources: value })} />
-            <Field label="可支持的创业方向" value={gardenForm.supportedDirections} onChange={(value) => setGardenForm({ ...gardenForm, supportedDirections: value })} />
-            <Field label="合作条件" textarea value={gardenForm.cooperationTerms} onChange={(value) => setGardenForm({ ...gardenForm, cooperationTerms: value })} />
-            <Field label="联系方式" value={gardenForm.contact} onChange={(value) => setGardenForm({ ...gardenForm, contact: value })} />
-            <FileSlot label="图片或视频资料占位" fileName={gardenForm.mediaName} onChange={(fileName) => setGardenForm({ ...gardenForm, mediaName: fileName })} />
-            <div className="mt-5">
-              <Label>资源标签</Label>
-              <TagPicker tags={matchTags} selectedTags={gardenForm.tags} onChange={(tags) => setGardenForm({ ...gardenForm, tags })} />
-            </div>
-            <button type="submit" className="mt-6 w-full rounded-full bg-tea-leaf px-5 py-3 text-sm font-bold text-white transition hover:bg-tea-ink">
-              保存茶园资源
-            </button>
-          </form>
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <LaunchCard
+            icon={<Users className="h-6 w-6" />}
+            title="大学生创业计划"
+            description="上传项目名称、团队介绍、所需资源、合作方式和附件占位，由系统与茶园资源做标签匹配。"
+            meta={`${projects.length} 份计划已在资源池`}
+            actionLabel="提交创业计划"
+            onClick={() => setActiveDialog('project')}
+          />
+          <LaunchCard
+            icon={<Building2 className="h-6 w-6" />}
+            title="茶园资源发布"
+            description="发布茶园场地、支持方向、合作条件和图片视频占位，方便创业团队快速理解可合作资源。"
+            meta={`${gardens.length} 个茶园资源已入库`}
+            actionLabel="发布茶园资源"
+            onClick={() => setActiveDialog('garden')}
+          />
         </div>
       </section>
 
       <section id="resource-slots" className="bg-white py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionHeader eyebrow="Matching Results" title="标签匹配结果" description="根据文旅、直播带货、茶产品设计、研学活动、品牌策划、数字农业等标签进行轻量推荐。" />
+          <SectionHeader
+            eyebrow="Matching Results"
+            title="标签匹配结果"
+            description="根据文旅、直播带货、茶产品设计、研学活动、品牌策划、数字农业等标签进行轻量推荐。"
+          />
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <StatCard icon={<BriefcaseBusiness className="h-5 w-5" />} label="创业计划" value={projects.length} />
             <StatCard icon={<Building2 className="h-5 w-5" />} label="茶园资源" value={gardens.length} />
@@ -161,25 +177,177 @@ export function MatchingPage() {
             {matchResults.length > 0 ? (
               matchResults.slice(0, 6).map((result) => <MatchResultCard key={result.id} result={result} />)
             ) : (
-              <div className="rounded-3xl bg-[#f7fbf3] p-8 text-center text-tea-ink/62">暂无标签重合结果，请至少为双方各选择一个相同标签。</div>
+              <div className="rounded-3xl bg-[#f7fbf3] p-8 text-center text-tea-ink/62">
+                暂无标签重合结果，请至少为双方各选择一个相同标签。
+              </div>
             )}
           </div>
         </div>
       </section>
+
+      <DialogWindow
+        open={activeDialog === 'project'}
+        title="大学生创业计划提交"
+        description="填写后会保存到浏览器本地数据池，并立即参与标签匹配。附件当前只记录文件名。"
+        onClose={() => setActiveDialog(null)}
+      >
+        <form onSubmit={submitProject}>
+          <FormTitle icon={<Users className="h-5 w-5" />} title="计划信息" />
+          <Field label="项目名称" value={projectForm.projectName} onChange={(value) => setProjectForm({ ...projectForm, projectName: value })} />
+          <Field label="团队介绍" textarea value={projectForm.teamIntro} onChange={(value) => setProjectForm({ ...projectForm, teamIntro: value })} />
+          <Field label="创业方向" value={projectForm.direction} onChange={(value) => setProjectForm({ ...projectForm, direction: value })} />
+          <Field label="所需资源" textarea value={projectForm.requiredResources} onChange={(value) => setProjectForm({ ...projectForm, requiredResources: value })} />
+          <Field label="预期合作方式" value={projectForm.cooperationMode} onChange={(value) => setProjectForm({ ...projectForm, cooperationMode: value })} />
+          <Field label="联系方式" value={projectForm.contact} onChange={(value) => setProjectForm({ ...projectForm, contact: value })} />
+          <FileSlot label="附件或图片上传占位" fileName={projectForm.attachmentName} onChange={(fileName) => setProjectForm({ ...projectForm, attachmentName: fileName })} />
+          <div className="mt-5">
+            <Label>匹配标签</Label>
+            <TagPicker tags={matchTags} selectedTags={projectForm.tags} onChange={(tags) => setProjectForm({ ...projectForm, tags })} />
+          </div>
+          <DialogActions onCancel={() => setActiveDialog(null)} submitLabel="保存创业计划" />
+        </form>
+      </DialogWindow>
+
+      <DialogWindow
+        open={activeDialog === 'garden'}
+        title="茶园资源发布"
+        description="填写后会保存到浏览器本地数据池，并立即与创业计划进行标签匹配。图片或视频当前只记录文件名。"
+        onClose={() => setActiveDialog(null)}
+      >
+        <form onSubmit={submitGarden}>
+          <FormTitle icon={<Building2 className="h-5 w-5" />} title="资源信息" />
+          <Field label="茶园名称" value={gardenForm.gardenName} onChange={(value) => setGardenForm({ ...gardenForm, gardenName: value })} />
+          <Field label="地理位置" value={gardenForm.location} onChange={(value) => setGardenForm({ ...gardenForm, location: value })} />
+          <Field label="可提供资源" textarea value={gardenForm.resources} onChange={(value) => setGardenForm({ ...gardenForm, resources: value })} />
+          <Field label="可支持的创业方向" value={gardenForm.supportedDirections} onChange={(value) => setGardenForm({ ...gardenForm, supportedDirections: value })} />
+          <Field label="合作条件" textarea value={gardenForm.cooperationTerms} onChange={(value) => setGardenForm({ ...gardenForm, cooperationTerms: value })} />
+          <Field label="联系方式" value={gardenForm.contact} onChange={(value) => setGardenForm({ ...gardenForm, contact: value })} />
+          <FileSlot label="图片或视频资料占位" fileName={gardenForm.mediaName} onChange={(fileName) => setGardenForm({ ...gardenForm, mediaName: fileName })} />
+          <div className="mt-5">
+            <Label>资源标签</Label>
+            <TagPicker tags={matchTags} selectedTags={gardenForm.tags} onChange={(tags) => setGardenForm({ ...gardenForm, tags })} />
+          </div>
+          <DialogActions onCancel={() => setActiveDialog(null)} submitLabel="保存茶园资源" />
+        </form>
+      </DialogWindow>
     </>
   );
 }
 
-function FormTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
+function LaunchCard({
+  icon,
+  title,
+  description,
+  meta,
+  actionLabel,
+  onClick,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  meta: string;
+  actionLabel: string;
+  onClick: () => void;
+}) {
   return (
-    <div className="mb-6 flex items-center gap-3">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-tea-mist text-tea-leaf">{icon}</span>
-      <h2 className="text-2xl font-black text-tea-ink">{title}</h2>
+    <article className="rounded-3xl bg-white p-6 shadow-soft">
+      <div className="flex items-start justify-between gap-4">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-tea-mist text-tea-leaf">{icon}</span>
+        <span className="rounded-full bg-tea-spring/18 px-3 py-1 text-xs font-black text-tea-leaf">{meta}</span>
+      </div>
+      <h2 className="mt-6 text-2xl font-black text-tea-ink">{title}</h2>
+      <p className="mt-3 text-sm leading-6 text-tea-ink/66">{description}</p>
+      <button
+        type="button"
+        onClick={onClick}
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-tea-ink px-5 py-3 text-sm font-bold text-white transition hover:bg-tea-leaf"
+      >
+        {actionLabel}
+        <ArrowRight className="h-4 w-4" />
+      </button>
+    </article>
+  );
+}
+
+function DialogWindow({
+  open,
+  title,
+  description,
+  children,
+  onClose,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  children: ReactNode;
+  onClose: () => void;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6">
+      <button type="button" aria-label="关闭窗口" className="absolute inset-0 bg-tea-ink/62 backdrop-blur-sm" onClick={onClose} />
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="matching-dialog-title"
+        className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-5 shadow-2xl sm:p-7"
+      >
+        <div className="sticky top-0 z-10 -mx-5 -mt-5 flex items-start justify-between gap-4 border-b border-tea-ink/8 bg-white/96 px-5 py-5 backdrop-blur sm:-mx-7 sm:-mt-7 sm:px-7">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-tea-mist px-3 py-1 text-xs font-black text-tea-leaf">
+              <Sprout className="h-3.5 w-3.5" />
+              二级填写窗口
+            </div>
+            <h2 id="matching-dialog-title" className="mt-3 text-2xl font-black text-tea-ink">
+              {title}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-tea-ink/62">{description}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-tea-mist text-tea-ink transition hover:bg-tea-ink hover:text-white"
+            aria-label="关闭窗口"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="pt-6">{children}</div>
+      </section>
     </div>
   );
 }
 
-function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
+function DialogActions({ onCancel, submitLabel }: { onCancel: () => void; submitLabel: string }) {
+  return (
+    <div className="mt-7 flex flex-col-reverse gap-3 border-t border-tea-ink/8 pt-5 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="rounded-full border border-tea-ink/12 bg-white px-5 py-3 text-sm font-bold text-tea-ink/70 transition hover:bg-tea-mist"
+      >
+        取消
+      </button>
+      <button type="submit" className="rounded-full bg-tea-ink px-5 py-3 text-sm font-bold text-white transition hover:bg-tea-leaf">
+        {submitLabel}
+      </button>
+    </div>
+  );
+}
+
+function FormTitle({ icon, title }: { icon: ReactNode; title: string }) {
+  return (
+    <div className="mb-6 flex items-center gap-3">
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-tea-mist text-tea-leaf">{icon}</span>
+      <h3 className="text-2xl font-black text-tea-ink">{title}</h3>
+    </div>
+  );
+}
+
+function Label({ children, htmlFor }: { children: ReactNode; htmlFor?: string }) {
   return (
     <label htmlFor={htmlFor} className="mb-2 block text-sm font-bold text-tea-ink/70">
       {children}
@@ -187,7 +355,17 @@ function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: str
   );
 }
 
-function Field({ label, value, onChange, textarea = false }: { label: string; value: string; onChange: (value: string) => void; textarea?: boolean }) {
+function Field({
+  label,
+  value,
+  onChange,
+  textarea = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  textarea?: boolean;
+}) {
   const fieldId = useId();
 
   return (
@@ -219,7 +397,10 @@ function FileSlot({ label, fileName, onChange }: { label: string; fileName?: str
   return (
     <div className="mt-4">
       <Label htmlFor={inputId}>{label}</Label>
-      <label htmlFor={inputId} className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-tea-leaf/28 bg-tea-mist/70 px-4 py-3 text-sm font-semibold text-tea-ink/62 transition hover:bg-tea-mist">
+      <label
+        htmlFor={inputId}
+        className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-tea-leaf/28 bg-tea-mist/70 px-4 py-3 text-sm font-semibold text-tea-ink/62 transition hover:bg-tea-mist"
+      >
         <span className="truncate">{fileName ?? '选择文件，仅记录文件名'}</span>
         <FileUp className="h-4 w-4 shrink-0 text-tea-leaf" />
         <input id={inputId} className="sr-only" type="file" onChange={(event) => onChange(event.target.files?.[0]?.name ?? '')} />
@@ -228,7 +409,7 @@ function FileSlot({ label, fileName, onChange }: { label: string; fileName?: str
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
+function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value: number }) {
   return (
     <div className="rounded-3xl bg-[#f7fbf3] p-6">
       <div className="flex items-center justify-between">
