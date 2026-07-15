@@ -19,7 +19,7 @@ export function MarketPage() {
 
       <section id="primary-section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <SectionHeader eyebrow="Product Showcase" title="茶叶与衍生产品展示" description="集中管理产品图片、介绍、规格、标签和后续购买或咨询入口，便于快速替换真实内容。" />
-        <div className="mt-8 grid gap-6 lg:grid-cols-3">
+        <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {teaProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
