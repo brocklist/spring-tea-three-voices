@@ -1,4 +1,5 @@
 import type {
+  ExternalKnowledgeSource,
   KnowledgeArticle,
   MediaAsset,
   PestDetectionResult,
@@ -97,6 +98,53 @@ export const knowledgeArticles: KnowledgeArticle[] = [
     category: '病虫害防治',
     summary: '连续阴雨后重点巡查叶斑、炭疽、茶尺蠖等风险点。',
     tags: ['病虫害', '预警', '巡田'],
+  },
+];
+
+export const externalKnowledgeSources: ExternalKnowledgeSource[] = [
+  {
+    id: 'moa-tea-season-guide',
+    title: '夏秋季茶园生产管理及防灾减灾技术指导意见',
+    organization: '农业农村部种植业管理司 / 全国农业技术推广服务中心',
+    category: '茶园管理',
+    url: 'https://zzys.moa.gov.cn/gzdt/202206/t20220621_6403020.htm',
+    summary: '覆盖茶树修剪、追肥、控草、浅耕、病虫害防控、洪涝和干旱应对，适合转化为季节性农事任务清单。',
+    sourceType: 'official',
+    tags: ['修剪', '施肥', '病虫害', '防灾减灾'],
+    updateHint: '适合按季节复核',
+  },
+  {
+    id: 'natesc-portal',
+    title: '全国农业技术推广服务中心',
+    organization: '全国农业技术推广服务中心',
+    category: '农技推广',
+    url: 'https://www.natesc.org.cn/',
+    summary: '提供农事指导、植检植保、技术模式、农技大数据等入口，后续可作为政策和农技资料索引来源。',
+    sourceType: 'extension',
+    tags: ['农事指导', '植检植保', '技术模式', '农技大数据'],
+    updateHint: '适合长期订阅',
+  },
+  {
+    id: 'china-tea-society-science',
+    title: '中国茶叶学会科技普及',
+    organization: '中国茶叶学会',
+    category: '茶叶科普',
+    url: 'https://www.chinatss.cn/technology',
+    summary: '聚合茶树栽培、茶叶加工、茶健康与茶科技传播内容，适合面向消费者和学生团队做知识转译。',
+    sourceType: 'research',
+    tags: ['茶科普', '茶科技', '加工', '传播'],
+    updateHint: '适合内容运营引用',
+  },
+  {
+    id: 'tbrs-tea-pest',
+    title: '茶树病虫害防治资料库',
+    organization: '农业部茶及饮料作物改良场',
+    category: '病虫害防治',
+    url: 'https://www.tbrs.gov.tw/ws.php?id=1542',
+    summary: '包含茶树病虫害、安全用药、非农药资材与防治时机等专题资料，可作为叶片识别结果的延伸阅读入口。',
+    sourceType: 'extension',
+    tags: ['病虫害', '安全用药', '绿色防控', '叶片识别'],
+    updateHint: '适合病害识别联动',
   },
 ];
 

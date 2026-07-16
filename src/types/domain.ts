@@ -37,6 +37,18 @@ export interface KnowledgeArticle {
   tags: string[];
 }
 
+export interface ExternalKnowledgeSource {
+  id: string;
+  title: string;
+  organization: string;
+  category: string;
+  url: string;
+  summary: string;
+  sourceType: 'official' | 'research' | 'extension';
+  tags: string[];
+  updateHint: string;
+}
+
 export interface TeaProduct {
   id: string;
   name: string;

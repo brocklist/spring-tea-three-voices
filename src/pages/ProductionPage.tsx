@@ -2,6 +2,7 @@ import { Activity, BrainCircuit, CloudSun, DatabaseZap, Leaf, Radar, ShieldCheck
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { MetricCard } from '../components/production/MetricCard';
+import { KnowledgeHubPanel } from '../components/production/KnowledgeHubPanel';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
@@ -228,6 +229,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
             </motion.article>
           ))}
         </div>
+        <KnowledgeHubPanel />
       </section>
     </>
   );
