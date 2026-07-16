@@ -38,7 +38,43 @@ export const mockDetectionResult: PestDetectionResult = {
   confidence: 86,
   summary: '叶片边缘出现不规则褐斑，纹理与知识库中茶炭疽病早期样本相近。',
   suggestion: '建议隔离观察同片区茶树，保持通风排湿，并联系农技人员确认后再进行针对性防治。',
+  severity: '中等风险',
+  leafPart: '叶缘与叶尖',
+  analysisPoints: ['病斑边缘不规则', '叶面湿度偏高时更易扩散', '建议复核同片区茶树叶片'],
 };
+
+export const leafDetectionDemos: PestDetectionResult[] = [
+  {
+    imageUrl: '/assets/leaf-demos/anthracnose.png',
+    pestType: '茶炭疽病疑似样本',
+    confidence: 88,
+    severity: '中等风险',
+    leafPart: '叶缘、叶尖',
+    summary: '示意图中叶缘出现褐色不规则病斑，中心颜色较深，边缘向外扩散，符合高湿天气后茶炭疽病早期巡查特征。',
+    suggestion: '建议先隔离观察同片区茶树，清理重病叶，保持茶垄通风排湿；如病斑继续扩大，应联系农技人员确认后再做针对性防治。',
+    analysisPoints: ['褐斑集中在叶缘和叶尖', '病斑形状不规则', '高湿天气后需要加密巡园'],
+  },
+  {
+    imageUrl: '/assets/leaf-demos/leafhopper.png',
+    pestType: '茶小绿叶蝉危害疑似样本',
+    confidence: 82,
+    severity: '轻中度风险',
+    leafPart: '嫩梢、叶脉附近',
+    summary: '示意图中嫩叶有细小失绿点和轻微卷曲，叶脉附近呈现针刺状斑点，接近茶小绿叶蝉取食后的典型表现。',
+    suggestion: '建议重点检查嫩梢背面和茶蓬表层，结合黄板或田间虫口密度判断；轻度发生时优先采用物理诱捕和修剪清园。',
+    analysisPoints: ['叶面有点状失绿', '嫩梢边缘轻微卷曲', '应检查叶背是否有活动虫体'],
+  },
+  {
+    imageUrl: '/assets/leaf-demos/healthy-leaf.png',
+    pestType: '健康嫩叶样本',
+    confidence: 94,
+    severity: '低风险',
+    leafPart: '整片叶面',
+    summary: '示意图中叶色均匀、叶脉清晰，没有明显褐斑、虫咬缺口或卷曲萎蔫表现，整体处于健康状态。',
+    suggestion: '建议保持常规巡园频率，关注天气变化和土壤湿度；春梢生长期继续做好轻采轻养与适度施肥。',
+    analysisPoints: ['叶色均匀鲜绿', '叶脉清晰完整', '未发现明显病斑或虫咬痕迹'],
+  },
+];
 
 export const knowledgeArticles: KnowledgeArticle[] = [
   {

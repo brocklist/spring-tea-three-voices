@@ -24,6 +24,9 @@ export interface PestDetectionResult {
   confidence: number;
   summary: string;
   suggestion: string;
+  severity?: string;
+  leafPart?: string;
+  analysisPoints?: string[];
 }
 
 export interface KnowledgeArticle {
