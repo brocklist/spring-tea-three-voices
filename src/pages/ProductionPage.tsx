@@ -1,11 +1,15 @@
 import { Activity, BrainCircuit, CloudSun, DatabaseZap, Leaf, Radar, ShieldCheck, Waves } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 import { MetricCard } from '../components/production/MetricCard';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
+import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
 import { Hero } from '../components/ui/Hero';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { heroAssets, knowledgeArticles, sensorMetrics, weatherMetrics } from '../data/mockData';
+import { defaultWeatherLocation, fetchWeatherMetrics, formatLocationName, type WeatherLocation } from '../lib/weather';
+import type { WeatherMetric } from '../types/domain';
 
 const operationHighlights = [
   { label: '今日作业窗口', value: '06:30 - 10:30', note: '适宜采摘与巡园', icon: CloudSun },
@@ -33,8 +37,53 @@ const elderPlantingTips = [
 ];
 
 export function ProductionPage({ careMode = false }: ProductionPageProps) {
+  const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
+  const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState<string>();
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadWeather() {
+      setWeatherLoading(true);
+      setWeatherError(undefined);
+
+      try {
+        const metrics = await fetchWeatherMetrics(weatherLocation);
+        if (!ignore) {
+          setLiveWeatherMetrics(metrics);
+        }
+      } catch {
+        if (!ignore) {
+          setWeatherError('实时天气暂时不可用，已保留最近一次数据');
+        }
+      } finally {
+        if (!ignore) {
+          setWeatherLoading(false);
+        }
+      }
+    }
+
+    loadWeather();
+    const timer = window.setInterval(loadWeather, 10 * 60 * 1000);
+
+    return () => {
+      ignore = true;
+      window.clearInterval(timer);
+    };
+  }, [weatherLocation]);
+
   if (careMode) {
-    return <ElderCareProductionPage />;
+    return (
+      <ElderCareProductionPage
+        weatherLocation={weatherLocation}
+        weatherMetrics={liveWeatherMetrics}
+        weatherLoading={weatherLoading}
+        weatherError={weatherError}
+        onWeatherLocationChange={setWeatherLocation}
+      />
+    );
   }
 
   return (
@@ -82,10 +131,18 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
             <SectionHeader
               eyebrow="Field Climate"
               title="气象与茶园环境监测"
-              description="天气、温湿度、降雨与风力数据集中展示，为采摘排班、病害预防和无人机巡田提供判断依据。"
+              description={`实时天气来自用户选择的地点：${formatLocationName(weatherLocation)}。天气、温湿度、降雨与风力数据集中展示，为采摘排班和病害预防提供判断依据。`}
             />
+            <div className="mt-6">
+              <WeatherLocationSelector
+                location={weatherLocation}
+                loading={weatherLoading}
+                error={weatherError}
+                onChange={setWeatherLocation}
+              />
+            </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {weatherMetrics.map((metric) => (
+              {liveWeatherMetrics.map((metric) => (
                 <MetricCard key={metric.id} metric={metric} />
               ))}
             </div>
@@ -176,7 +233,19 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   );
 }
 
-function ElderCareProductionPage() {
+function ElderCareProductionPage({
+  weatherLocation,
+  weatherMetrics,
+  weatherLoading,
+  weatherError,
+  onWeatherLocationChange,
+}: {
+  weatherLocation: WeatherLocation;
+  weatherMetrics: WeatherMetric[];
+  weatherLoading: boolean;
+  weatherError?: string;
+  onWeatherLocationChange: (location: WeatherLocation) => void;
+}) {
   return (
     <div className="bg-[#f7fbf3]">
       <section className="relative overflow-hidden bg-tea-ink">
@@ -191,14 +260,20 @@ function ElderCareProductionPage() {
             </div>
             <h1 className="mt-6 text-4xl font-black leading-tight text-white sm:text-6xl">春建茶园今日信息</h1>
             <p className="mt-5 max-w-3xl text-2xl font-semibold leading-relaxed text-white/82">
-              只保留天气、种植建议和巡园提醒。字体更大，信息更少，方便快速查看。
+              只保留天气、种植建议和巡园提醒。当前地点：{formatLocationName(weatherLocation)}。
             </p>
           </div>
         </div>
       </section>
 
       <section id="primary-section" className="section-shell py-10 sm:py-14">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <WeatherLocationSelector
+          location={weatherLocation}
+          loading={weatherLoading}
+          error={weatherError}
+          onChange={onWeatherLocationChange}
+        />
+        <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {weatherMetrics.map((metric) => (
             <article key={metric.id} className="tea-card rounded-[1.75rem] p-6">
               <p className="text-2xl font-black text-tea-leaf">{metric.label}</p>
