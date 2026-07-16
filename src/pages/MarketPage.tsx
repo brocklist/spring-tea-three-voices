@@ -1,9 +1,48 @@
-import { Film, Image as ImageIcon, Quote, Sprout } from 'lucide-react';
+import { ArrowUpRight, Film, Image as ImageIcon, Quote, Sprout } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ProductCard } from '../components/market/ProductCard';
 import { Hero } from '../components/ui/Hero';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { heroAssets, mediaAssets, teaProducts } from '../data/mockData';
+
+const brandStoryCards = [
+  {
+    id: 'origin',
+    label: '板块 1',
+    title: '茶园产地',
+    subtitle: '山野原生茶园・一方水土养好茶',
+    description:
+      '实地走访春建乡核心茶山，用实景图文、农户采访、产地气候土壤数据，还原茶园原生生长环境，记录茶山百年沿革与乡土自然故事。',
+    url: 'https://mp.weixin.qq.com/s/7gL4rSQSrE0kElfU8ScTUA',
+  },
+  {
+    id: 'craft',
+    label: '板块 2',
+    title: '制茶工艺',
+    subtitle: '古法匠心制茶・坚守手作本味',
+    description:
+      '完整拆解从采摘到成茶全流程工艺，收录制茶老师傅口述实录、工序实拍、风味品鉴数据，读懂一杯好茶背后代代相传的手工技艺。',
+    url: 'https://mp.weixin.qq.com/s/pG3qqR58TAEuDs4GsDPqYg',
+  },
+  {
+    id: 'tea-seat',
+    label: '板块 3',
+    title: '茶席文化',
+    subtitle: '新式乡村茶席・活化乡土茶文化',
+    description:
+      '记录在地茶会、校园茶实践、大众茶体验活动，以活动纪实、参与者访谈、现场图文，展现传统茶席适配现代生活的全新表达。',
+    url: 'https://mp.weixin.qq.com/s/p3OzmonMFNpRQbQdnARd0w',
+  },
+  {
+    id: 'shared-prosperity',
+    label: '板块 4',
+    title: '共富故事',
+    subtitle: '茶产业共富工坊・青年助农纪实',
+    description:
+      '聚焦大学生实践团队、共富工坊运营、茶农增收真实案例，包含农户收入数据、项目成果报道、青年助农心路采访，讲透茶叶如何带动村民共同致富。',
+    url: 'https://mp.weixin.qq.com/s/6pRxteeMdMc9gd6Y2sWR2w',
+  },
+];
 
 export function MarketPage() {
   return (
@@ -18,7 +57,11 @@ export function MarketPage() {
       />
 
       <section id="primary-section" className="section-shell py-16">
-        <SectionHeader eyebrow="Product Showcase" title="茶叶与衍生产品展示" description="集中呈现产品图片、介绍、规格、标签和咨询入口，让春建茶香以更完整的品牌面貌触达消费者。" />
+        <SectionHeader
+          eyebrow="Product Showcase"
+          title="茶叶与衍生产品展示"
+          description="集中呈现产品图片、介绍、规格、标签和咨询入口，让春建茶香以更完整的品牌面貌触达消费者。"
+        />
         <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {teaProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
@@ -27,35 +70,61 @@ export function MarketPage() {
       </section>
 
       <section className="bg-white py-16">
-        <div id="market-action-placeholders" className="section-shell grid scroll-mt-24 gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+        <div id="market-action-placeholders" className="section-shell grid scroll-mt-24 gap-10 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
-            <SectionHeader eyebrow="Brand Story" title="春建乡茶品牌故事" description="以春建乡茶园历史、共富工坊、大学生实践和茶农故事串联产品价值与乡村振兴叙事。" />
-            <div className="mt-8 rounded-3xl bg-tea-mist p-6">
-              <Quote className="h-8 w-8 text-tea-leaf" />
-              <p className="mt-4 text-xl font-black leading-9 text-tea-ink">从一片春茶到一个乡村品牌，让茶农、学生团队、消费者和合作方在同一条香途中相遇。</p>
+            <div className="inline-flex items-center gap-2 rounded-full border border-tea-ink/8 bg-white px-4 py-2 text-sm font-black text-tea-leaf shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-tea-gold" />
+              Brand Story・春建乡共富茶品牌叙事
+            </div>
+            <h2 className="mt-6 text-4xl font-black tracking-tight text-tea-ink sm:text-5xl">一叶春茶，铺就乡村共富路</h2>
+            <p className="mt-6 max-w-2xl text-lg font-semibold leading-9 text-tea-ink/74">
+              以百年茶园底蕴、大学生助农实践、共富工坊运营、一线茶农真实故事四大主线，完整讲述春建乡茶产业从原生山野茶到特色乡村品牌的全过程，诠释茶产业带动乡村振兴的完整路径。
+            </p>
+            <div className="mt-10 rounded-[2rem] bg-tea-mist p-7 sm:p-9">
+              <Quote className="h-10 w-10 text-tea-leaf" />
+              <p className="mt-5 text-2xl font-black leading-relaxed text-tea-ink">
+                一片茶叶串联起山野、茶农、青年与食客，以茶为媒介，让乡土价值、青年理想、共富愿景在此相遇共生。
+              </p>
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {['茶园产地', '制茶工艺', '茶席文化', '共富故事'].map((item, index) => (
-              <motion.div
-                key={item}
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {brandStoryCards.map((item, index) => (
+              <motion.a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
                 initial={{ opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-80px' }}
                 transition={{ duration: 0.42, delay: index * 0.05 }}
-                className="rounded-3xl border border-tea-ink/8 bg-[#f7fbf3] p-6"
+                className="group flex min-h-[285px] flex-col rounded-[2rem] border border-tea-ink/8 bg-[#f7fbf3] p-6 transition hover:-translate-y-1 hover:border-tea-leaf/28 hover:bg-tea-mist hover:shadow-soft"
               >
-                <Sprout className="h-6 w-6 text-tea-leaf" />
-                <h3 className="mt-5 text-xl font-black text-tea-ink">{item}</h3>
-                <p className="mt-3 text-sm leading-6 text-tea-ink/62">用图文内容承接真实故事、采访节选、数据成果与活动报道。</p>
-              </motion.div>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <Sprout className="h-7 w-7 text-tea-leaf" />
+                    <p className="mt-5 text-sm font-black text-tea-leaf">{item.label}｜{item.title}</p>
+                  </div>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-tea-leaf shadow-sm transition group-hover:bg-tea-leaf group-hover:text-white">
+                    <ArrowUpRight className="h-5 w-5" />
+                  </span>
+                </div>
+                <h3 className="mt-4 text-2xl font-black leading-snug text-tea-ink">{item.subtitle}</h3>
+                <p className="mt-4 flex-1 text-sm font-semibold leading-7 text-tea-ink/66">{item.description}</p>
+                <div className="tea-footer mt-6 rounded-2xl px-4 py-3 text-sm font-black text-tea-leaf">点击阅读对应公众号图文</div>
+              </motion.a>
             ))}
           </div>
         </div>
       </section>
 
       <section id="resource-slots" className="section-shell py-16">
-        <SectionHeader eyebrow="Tea Culture Media" title="视频与茶文化资源" description="以茶园影像、制茶工艺和茶文化图文内容增强产品记忆点。" />
+        <SectionHeader
+          eyebrow="Tea Culture Media"
+          title="视频与茶文化资源"
+          description="以茶园影像、制茶工艺和茶文化图文内容增强产品记忆点。"
+        />
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           {mediaAssets.map((asset) => (
             <article key={asset.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
