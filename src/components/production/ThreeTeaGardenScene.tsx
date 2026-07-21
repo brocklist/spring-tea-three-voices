@@ -117,16 +117,16 @@ function Terrain({ onReady }: { onReady: () => void }) {
         <meshStandardMaterial map={texture} roughness={0.96} metalness={0.03} side={DoubleSide} />
       </mesh>
       <mesh geometry={geometry} position={[0, 0.012, 0]}>
-        <meshBasicMaterial color="#4df5cc" wireframe transparent opacity={0.1} depthWrite={false} />
+        <meshBasicMaterial color="#4df5cc" wireframe transparent opacity={0.13} depthWrite={false} />
       </mesh>
       <Grid
         args={[terrainSize.width, terrainSize.depth]}
         position={[0, 0.075, 0]}
         cellSize={0.72}
-        cellThickness={0.35}
+        cellThickness={0.32}
         cellColor="#48e5bd"
         sectionSize={3.6}
-        sectionThickness={0.65}
+        sectionThickness={0.52}
         sectionColor="#79f4d2"
         fadeDistance={17}
         fadeStrength={1}

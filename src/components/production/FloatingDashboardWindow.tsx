@@ -60,6 +60,12 @@ export function FloatingDashboardWindow({
   const x = useMotionValue(position.x);
   const y = useMotionValue(position.y);
   const [isDragging, setIsDragging] = useState(false);
+  const draggingRef = useRef(false);
+  const positionChangeRef = useRef(onPositionChange);
+
+  useEffect(() => {
+    positionChangeRef.current = onPositionChange;
+  }, [onPositionChange]);
 
   useEffect(() => {
     if (!isDragging) {
@@ -74,11 +80,14 @@ export function FloatingDashboardWindow({
     }
 
     const syncPosition = () => {
+      if (draggingRef.current) {
+        return;
+      }
       const next = clampPosition({ x: x.get(), y: y.get() }, elementRef.current);
       x.set(next.x);
       y.set(next.y);
       if (next.x !== position.x || next.y !== position.y) {
-        onPositionChange(next);
+        positionChangeRef.current(next);
       }
     };
 
@@ -95,7 +104,7 @@ export function FloatingDashboardWindow({
       observer?.disconnect();
       window.removeEventListener('resize', syncPosition);
     };
-  }, [isOpen, minimized, onPositionChange, position.x, position.y, x, y]);
+  }, [isOpen, minimized, position.x, position.y, x, y]);
 
   function moveBy(xOffset: number, yOffset: number) {
     const next = clampPosition({ x: x.get() + xOffset, y: y.get() + yOffset }, elementRef.current);
@@ -145,13 +154,17 @@ export function FloatingDashboardWindow({
           dragElastic={0}
           dragMomentum={false}
           onPointerDown={onFocus}
-          onDragStart={() => setIsDragging(true)}
+          onDragStart={() => {
+            draggingRef.current = true;
+            setIsDragging(true);
+          }}
           onDragEnd={() => {
+            draggingRef.current = false;
             setIsDragging(false);
             const next = clampPosition({ x: x.get(), y: y.get() }, elementRef.current);
             x.set(next.x);
             y.set(next.y);
-            onPositionChange(next);
+            positionChangeRef.current(next);
           }}
         >
           <header className="twin-window__header" tabIndex={0} onPointerDown={startDragging} onKeyDown={handleKeyDown} aria-label={`Move ${title} window`}>

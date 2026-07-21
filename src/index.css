@@ -809,20 +809,20 @@ select {
 }
 
 .twin-map-atmosphere {
-  opacity: 0.72;
+  opacity: 0.5;
   background:
-    radial-gradient(ellipse at 28% 56%, rgba(151, 232, 186, 0.14), transparent 28%),
-    radial-gradient(ellipse at 72% 30%, rgba(77, 239, 197, 0.12), transparent 30%),
-    repeating-linear-gradient(116deg, transparent 0 24px, rgba(119, 255, 210, 0.032) 25px, transparent 27px 54px);
-  mix-blend-mode: screen;
-  animation: twinAtmosphere 12s ease-in-out infinite alternate;
+    radial-gradient(ellipse at 27% 60%, rgba(123, 221, 163, 0.13), transparent 32%),
+    radial-gradient(ellipse at 76% 33%, rgba(61, 219, 176, 0.1), transparent 30%),
+    repeating-linear-gradient(116deg, transparent 0 30px, rgba(119, 255, 210, 0.028) 31px, transparent 33px 66px);
+  mask-image: radial-gradient(ellipse at 50% 50%, transparent 12%, black 76%);
+  animation: none;
 }
 
 .twin-map-scan {
-  opacity: 0.46;
-  background: linear-gradient(112deg, transparent 0 38%, rgba(126, 255, 215, 0.16) 48%, transparent 58%);
-  background-size: 220% 100%;
-  animation: twinScan 8s linear infinite;
+  opacity: 0.3;
+  background: repeating-radial-gradient(ellipse at 52% 49%, transparent 0 15%, rgba(126, 255, 215, 0.09) 15.2% 15.4%, transparent 15.8% 29%);
+  mask-image: radial-gradient(ellipse at 52% 49%, black 8%, transparent 72%);
+  animation: none;
 }
 
 .twin-topbar,

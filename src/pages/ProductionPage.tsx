@@ -68,7 +68,6 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   const [weatherError, setWeatherError] = useState<string>();
   const [selectedZoneId, setSelectedZoneId] = useState(teaGardenZones[0].id);
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
-  const [now, setNow] = useState(() => new Date());
   const [windowStates, setWindowStates] = useState<DashboardWindowStates>(createWindowStates);
   const [windowOrder, setWindowOrder] = useState<DashboardPanelId[]>(dashboardPanels);
   const [sceneResetToken, setSceneResetToken] = useState(0);
@@ -108,11 +107,6 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
       window.clearInterval(timer);
     };
   }, [weatherLocation]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   if (careMode) {
     return (
@@ -205,8 +199,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         </div>
         <div className="twin-topbar__meta">
           <span className="twin-live-status"><span />监测在线</span>
-          <span className="hidden md:inline">{now.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' })}</span>
-          <time>{now.toLocaleTimeString('zh-CN', { hour12: false })}</time>
+          <TwinClock />
           <button type="button" onClick={resetWindowLayout} className="twin-reset" title="Restore window layout" aria-label="Restore window layout">
             <LayoutPanelTop className="h-4 w-4" />
           </button>
@@ -338,6 +331,22 @@ function ToolbarButton({ icon: Icon, label, active, onClick }: { icon: typeof Ac
       <Icon className="h-4 w-4" />
       <span>{label}</span>
     </button>
+  );
+}
+
+function TwinClock() {
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <>
+      <span className="hidden md:inline">{now.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' })}</span>
+      <time>{now.toLocaleTimeString('zh-CN', { hour12: false })}</time>
+    </>
   );
 }
 
