@@ -22,7 +22,7 @@ export interface TeaGardenZone {
   id: string;
   name: string;
   position: [number, number, number];
-  focusOffset: [number, number, number];
+  cameraPose: CameraPose;
   markerTone: 'mint' | 'cyan' | 'gold';
   status: string;
   risk: string;
@@ -31,6 +31,12 @@ export interface TeaGardenZone {
   humidity: string;
   soilMoisture: string;
   action: string;
+}
+
+export interface CameraPose {
+  position: [number, number, number];
+  target: [number, number, number];
+  fov: number;
 }
 
 export interface PestDetectionResult {

@@ -31,6 +31,26 @@ interface ForecastResponse {
     weather_code?: number;
     wind_speed_10m?: number;
   };
+  hourly?: {
+    time?: string[];
+    temperature_2m?: number[];
+    relative_humidity_2m?: number[];
+    precipitation_probability?: number[];
+    wind_speed_10m?: number[];
+  };
+}
+
+export interface WeatherForecastPoint {
+  time: string;
+  temperature: number;
+  humidity: number;
+  rainProbability: number;
+  wind: number;
+}
+
+export interface WeatherDashboardData {
+  metrics: WeatherMetric[];
+  forecast: WeatherForecastPoint[];
 }
 
 export const defaultWeatherLocation: WeatherLocation = {
@@ -89,6 +109,11 @@ export async function searchWeatherLocations(query: string): Promise<WeatherLoca
 }
 
 export async function fetchWeatherMetrics(location: WeatherLocation): Promise<WeatherMetric[]> {
+  const dashboard = await fetchWeatherDashboard(location);
+  return dashboard.metrics;
+}
+
+export async function fetchWeatherDashboard(location: WeatherLocation): Promise<WeatherDashboardData> {
   const url = new URL('https://api.open-meteo.com/v1/forecast');
   url.searchParams.set('latitude', String(location.latitude));
   url.searchParams.set('longitude', String(location.longitude));
@@ -96,6 +121,11 @@ export async function fetchWeatherMetrics(location: WeatherLocation): Promise<We
     'current',
     ['temperature_2m', 'relative_humidity_2m', 'precipitation', 'rain', 'weather_code', 'wind_speed_10m'].join(','),
   );
+  url.searchParams.set(
+    'hourly',
+    ['temperature_2m', 'relative_humidity_2m', 'precipitation_probability', 'wind_speed_10m'].join(','),
+  );
+  url.searchParams.set('forecast_days', '1');
   url.searchParams.set('timezone', 'auto');
 
   const response = await fetch(url);
@@ -115,7 +145,7 @@ export async function fetchWeatherMetrics(location: WeatherLocation): Promise<We
   const humidity = current.relative_humidity_2m ?? 0;
   const temperature = current.temperature_2m ?? 0;
 
-  return [
+  const metrics: WeatherMetric[] = [
     {
       id: 'weather',
       label: '当前天气',
@@ -156,6 +186,22 @@ export async function fetchWeatherMetrics(location: WeatherLocation): Promise<We
       updatedAt,
     },
   ];
+
+  const hourly = data.hourly;
+  const currentHourIndex = hourly?.time?.findIndex((time) => new Date(time).getTime() >= Date.now() - 30 * 60 * 1000) ?? -1;
+  const startIndex = Math.max(0, currentHourIndex);
+  const forecast = Array.from({ length: 6 }, (_, offset) => {
+    const index = startIndex + offset;
+    return {
+      time: formatWeatherTime(hourly?.time?.[index] ?? current.time),
+      temperature: hourly?.temperature_2m?.[index] ?? temperature,
+      humidity: hourly?.relative_humidity_2m?.[index] ?? humidity,
+      rainProbability: hourly?.precipitation_probability?.[index] ?? 0,
+      wind: hourly?.wind_speed_10m?.[index] ?? wind,
+    };
+  });
+
+  return { metrics, forecast };
 }
 
 export function formatLocationName(location: WeatherLocation) {

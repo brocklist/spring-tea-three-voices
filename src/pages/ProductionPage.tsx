@@ -1,13 +1,13 @@
-import { Activity, BrainCircuit, CloudSun, DatabaseZap, Leaf, MapPinned, Radar, RotateCcw, ScanSearch, ShieldCheck, Sprout, Waves } from 'lucide-react';
+import { Activity, BrainCircuit, CloudSun, DatabaseZap, LayoutPanelTop, Leaf, MapPinned, Radar, RotateCcw, ScanSearch, ShieldCheck, Sprout, Waves } from 'lucide-react';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { FloatingDashboardWindow, type DashboardPanelId } from '../components/production/FloatingDashboardWindow';
+import { FloatingDashboardWindow, type DashboardPanelId, type DashboardWindowPosition } from '../components/production/FloatingDashboardWindow';
 import { KnowledgeHubPanel } from '../components/production/KnowledgeHubPanel';
 import { MetricCard } from '../components/production/MetricCard';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
 import { heroAssets, knowledgeArticles, sensorMetrics, teaGardenZones, weatherMetrics } from '../data/mockData';
-import { defaultWeatherLocation, fetchWeatherMetrics, formatLocationName, type WeatherLocation } from '../lib/weather';
+import { defaultWeatherLocation, fetchWeatherDashboard, formatLocationName, type WeatherForecastPoint, type WeatherLocation } from '../lib/weather';
 import type { TeaGardenZone, WeatherMetric } from '../types/domain';
 
 const ThreeTeaGardenScene = lazy(() =>
@@ -26,23 +26,29 @@ const elderPlantingTips = [
   { title: '浇水与施肥', body: '土壤湿度处在适宜范围，今天不建议大量补水。春梢生长期可少量多次补充有机肥。' },
 ];
 
-const defaultOpenPanels: Record<DashboardPanelId, boolean> = {
-  overview: true,
-  weather: true,
-  sensors: false,
-  zone: false,
-  leaf: false,
-  knowledge: false,
-};
+interface DashboardWindowState {
+  open: boolean;
+  minimized: boolean;
+  position: DashboardWindowPosition;
+  zIndex: number;
+}
 
-const defaultMinimizedPanels: Record<DashboardPanelId, boolean> = {
-  overview: false,
-  weather: false,
-  sensors: false,
-  zone: false,
-  leaf: false,
-  knowledge: false,
-};
+type DashboardWindowStates = Record<DashboardPanelId, DashboardWindowState>;
+
+function createWindowStates(): DashboardWindowStates {
+  const viewportWidth = typeof window === 'undefined' ? 1440 : window.innerWidth;
+  const compact = viewportWidth < 720;
+  const rightColumn = Math.max(compact ? 28 : 800, viewportWidth - (compact ? 340 : 366));
+
+  return {
+    overview: { open: true, minimized: false, position: { x: compact ? 12 : 18, y: compact ? 88 : 94 }, zIndex: 12 },
+    weather: { open: !compact, minimized: false, position: { x: rightColumn, y: compact ? 130 : 94 }, zIndex: 11 },
+    sensors: { open: false, minimized: false, position: { x: compact ? 26 : 36, y: compact ? 180 : 168 }, zIndex: 10 },
+    zone: { open: false, minimized: false, position: { x: compact ? 32 : 80, y: compact ? 214 : 150 }, zIndex: 13 },
+    leaf: { open: false, minimized: false, position: { x: compact ? 22 : rightColumn - 160, y: compact ? 244 : 140 }, zIndex: 10 },
+    knowledge: { open: false, minimized: false, position: { x: compact ? 16 : rightColumn - 220, y: compact ? 276 : 174 }, zIndex: 10 },
+  };
+}
 
 interface ProductionPageProps {
   careMode?: boolean;
@@ -51,18 +57,14 @@ interface ProductionPageProps {
 export function ProductionPage({ careMode = false }: ProductionPageProps) {
   const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
+  const [weatherForecast, setWeatherForecast] = useState<WeatherForecastPoint[]>([]);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string>();
   const [selectedZoneId, setSelectedZoneId] = useState(teaGardenZones[0].id);
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
   const [now, setNow] = useState(() => new Date());
-  const [openPanels, setOpenPanels] = useState(() => ({
-    ...defaultOpenPanels,
-    weather: typeof window === 'undefined' ? true : window.innerWidth > 1023,
-  }));
-  const [minimizedPanels, setMinimizedPanels] = useState(defaultMinimizedPanels);
+  const [windowStates, setWindowStates] = useState<DashboardWindowStates>(createWindowStates);
   const [sceneResetToken, setSceneResetToken] = useState(0);
-  const [isCompactViewport, setIsCompactViewport] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 1023);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
 
   useEffect(() => {
@@ -73,9 +75,10 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
       setWeatherError(undefined);
 
       try {
-        const metrics = await fetchWeatherMetrics(weatherLocation);
+        const dashboard = await fetchWeatherDashboard(weatherLocation);
         if (!ignore) {
-          setLiveWeatherMetrics(metrics);
+          setLiveWeatherMetrics(dashboard.metrics);
+          setWeatherForecast(dashboard.forecast);
           lastSuccessfulWeatherLocation.current = weatherLocation;
         }
       } catch {
@@ -104,28 +107,6 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    const compactViewport = window.matchMedia('(max-width: 1023px)');
-    const syncViewport = () => {
-      setIsCompactViewport(compactViewport.matches);
-      if (compactViewport.matches) {
-        setOpenPanels((current) => ({
-          ...current,
-          overview: true,
-          weather: false,
-          sensors: false,
-          zone: false,
-          leaf: false,
-          knowledge: false,
-        }));
-      }
-    };
-
-    syncViewport();
-    compactViewport.addEventListener('change', syncViewport);
-    return () => compactViewport.removeEventListener('change', syncViewport);
-  }, []);
-
   if (careMode) {
     return (
       <ElderCareProductionPage
@@ -139,77 +120,73 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   }
 
   const selectedZone = teaGardenZones.find((zone) => zone.id === selectedZoneId) ?? teaGardenZones[0];
+  const openPanels = Object.fromEntries(
+    Object.entries(windowStates).map(([panel, state]) => [panel, state.open]),
+  ) as Record<DashboardPanelId, boolean>;
+  const windowProps = (panel: DashboardPanelId) => ({
+    isOpen: windowStates[panel].open,
+    minimized: windowStates[panel].minimized,
+    position: windowStates[panel].position,
+    zIndex: windowStates[panel].zIndex,
+    onClose: () => closePanel(panel),
+    onMinimize: () => minimizePanel(panel),
+    onFocus: () => focusWindow(panel),
+    onPositionChange: (position: DashboardWindowPosition) => updateWindowPosition(panel, position),
+  });
 
   function closePanel(panel: DashboardPanelId) {
-    setOpenPanels((current) => ({ ...current, [panel]: false }));
+    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], open: false } }));
   }
 
   function minimizePanel(panel: DashboardPanelId) {
-    setMinimizedPanels((current) => ({ ...current, [panel]: !current[panel] }));
+    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], minimized: !current[panel].minimized } }));
   }
 
   function openPanel(panel: DashboardPanelId) {
-    if (openPanels[panel] && minimizedPanels[panel]) {
-      setMinimizedPanels((current) => ({ ...current, [panel]: false }));
-      return;
-    }
-
-    if (isCompactViewport) {
-      setOpenPanels({ overview: false, weather: false, sensors: false, zone: false, leaf: false, knowledge: false, [panel]: true });
-      setMinimizedPanels((current) => ({ ...current, [panel]: false }));
-      return;
-    }
-
-    setOpenPanels((current) => {
-      const next = { ...current, [panel]: !current[panel] };
-
-      if (next[panel]) {
-        if (panel === 'overview') {
-          next.zone = false;
-          next.sensors = false;
-        }
-        if (panel === 'weather') {
-          next.leaf = false;
-          next.knowledge = false;
-        }
-        if (panel === 'sensors') {
-          next.overview = false;
-          next.zone = false;
-        }
-        if (panel === 'leaf' || panel === 'knowledge') {
-          next.weather = false;
-          next[panel === 'leaf' ? 'knowledge' : 'leaf'] = false;
-        }
-      }
-
-      return next;
+    setWindowStates((current) => {
+      const target = current[panel];
+      const highestZ = Math.max(...Object.values(current).map((windowState) => windowState.zIndex));
+      return {
+        ...current,
+        [panel]: {
+          ...target,
+          open: true,
+          minimized: false,
+          zIndex: highestZ + 1,
+        },
+      };
     });
-    setMinimizedPanels((current) => ({ ...current, [panel]: false }));
   }
 
   function selectZone(zoneId: string) {
     setSelectedZoneId(zoneId);
     setFocusedZoneId(zoneId);
-    setOpenPanels((current) => isCompactViewport
-      ? { ...current, overview: false, weather: false, sensors: false, zone: true, leaf: false, knowledge: false }
-      : { ...current, overview: false, sensors: false, zone: true });
-    setMinimizedPanels((current) => ({ ...current, zone: false }));
+    setWindowStates((current) => {
+      const highestZ = Math.max(...Object.values(current).map((windowState) => windowState.zIndex));
+      return { ...current, zone: { ...current.zone, open: true, minimized: false, zIndex: highestZ + 1 } };
+    });
+  }
+
+  function focusWindow(panel: DashboardPanelId) {
+    setWindowStates((current) => {
+      const highestZ = Math.max(...Object.values(current).map((windowState) => windowState.zIndex));
+      return { ...current, [panel]: { ...current[panel], zIndex: highestZ + 1 } };
+    });
+  }
+
+  function updateWindowPosition(panel: DashboardPanelId, position: DashboardWindowPosition) {
+    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], position } }));
+  }
+
+  function resetWindowLayout() {
+    setWindowStates(createWindowStates());
   }
 
   function resetScene() {
     setSelectedZoneId(teaGardenZones[0].id);
     setFocusedZoneId(undefined);
     setSceneResetToken((token) => token + 1);
-    setOpenPanels((current) => ({
-      ...current,
-      zone: false,
-      overview: true,
-      sensors: false,
-      weather: isCompactViewport ? false : current.weather,
-      leaf: isCompactViewport ? false : current.leaf,
-      knowledge: isCompactViewport ? false : current.knowledge,
-    }));
-    setMinimizedPanels((current) => ({ ...current, overview: false }));
+    setWindowStates((current) => ({ ...current, overview: { ...current.overview, open: true, minimized: false } }));
   }
 
   return (
@@ -220,6 +197,8 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         </Suspense>
       </div>
       <div className="twin-map-vignette" />
+      <div className="twin-map-atmosphere" />
+      <div className="twin-map-scan" />
 
       <header className="twin-topbar">
         <div className="flex min-w-0 items-center gap-3">
@@ -233,6 +212,9 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
           <span className="twin-live-status"><span />监测在线</span>
           <span className="hidden md:inline">{now.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' })}</span>
           <time>{now.toLocaleTimeString('zh-CN', { hour12: false })}</time>
+          <button type="button" onClick={resetWindowLayout} className="twin-reset" title="Restore window layout" aria-label="Restore window layout">
+            <LayoutPanelTop className="h-4 w-4" />
+          </button>
           <button type="button" onClick={resetScene} className="twin-reset" title="回到默认视角" aria-label="回到默认视角">
             <RotateCcw className="h-4 w-4" />
           </button>
@@ -244,11 +226,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         title="今日茶园态势"
         eyebrow="Production overview"
         icon={Activity}
-        position="left"
-        isOpen={openPanels.overview}
-        minimized={minimizedPanels.overview}
-        onClose={() => closePanel('overview')}
-        onMinimize={() => minimizePanel('overview')}
+        {...windowProps('overview')}
       >
         <p className="text-sm font-semibold leading-6 text-emerald-50/66">天气、土壤与叶面风险共同形成今日生产建议。</p>
         <div className="mt-4 grid gap-2">
@@ -274,11 +252,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         title={selectedZone.name}
         eyebrow="Selected tea garden zone"
         icon={MapPinned}
-        position="left-large"
-        isOpen={openPanels.zone}
-        minimized={minimizedPanels.zone}
-        onClose={() => closePanel('zone')}
-        onMinimize={() => minimizePanel('zone')}
+        {...windowProps('zone')}
       >
         <ZoneDetail zone={selectedZone} />
       </FloatingDashboardWindow>
@@ -288,11 +262,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         title="茶园传感器"
         eyebrow="Live sensor network"
         icon={Waves}
-        position="left-large"
-        isOpen={openPanels.sensors}
-        minimized={minimizedPanels.sensors}
-        onClose={() => closePanel('sensors')}
-        onMinimize={() => minimizePanel('sensors')}
+        {...windowProps('sensors')}
       >
         <div className="grid gap-3 sm:grid-cols-2">
           {sensorMetrics.map((metric) => <SensorGauge key={metric.id} metric={metric} />)}
@@ -304,11 +274,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         title="实时天气"
         eyebrow="Open-Meteo live data"
         icon={CloudSun}
-        position="right"
-        isOpen={openPanels.weather}
-        minimized={minimizedPanels.weather}
-        onClose={() => closePanel('weather')}
-        onMinimize={() => minimizePanel('weather')}
+        {...windowProps('weather')}
       >
         <WeatherLocationSelector compact location={weatherLocation} loading={weatherLoading} error={weatherError} onChange={setWeatherLocation} />
         <div className="mt-3 grid grid-cols-2 gap-3">
@@ -318,6 +284,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
             </div>
           ))}
         </div>
+        <WeatherTrend forecast={weatherForecast} />
       </FloatingDashboardWindow>
 
       <FloatingDashboardWindow
@@ -325,11 +292,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         title="叶片健康识别"
         eyebrow="Leaf health intelligence"
         icon={ScanSearch}
-        position="right-large"
-        isOpen={openPanels.leaf}
-        minimized={minimizedPanels.leaf}
-        onClose={() => closePanel('leaf')}
-        onMinimize={() => minimizePanel('leaf')}
+        {...windowProps('leaf')}
       >
         <PestDetectionPanel />
       </FloatingDashboardWindow>
@@ -339,11 +302,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         title="农业知识辅助"
         eyebrow="Agronomy knowledge hub"
         icon={BrainCircuit}
-        position="right-large"
-        isOpen={openPanels.knowledge}
-        minimized={minimizedPanels.knowledge}
-        onClose={() => closePanel('knowledge')}
-        onMinimize={() => minimizePanel('knowledge')}
+        {...windowProps('knowledge')}
       >
         <div className="grid gap-3 sm:grid-cols-2">
           {knowledgeArticles.map((article, index) => (
@@ -384,6 +343,31 @@ function ToolbarButton({ icon: Icon, label, active, onClick }: { icon: typeof Ac
       <Icon className="h-4 w-4" />
       <span>{label}</span>
     </button>
+  );
+}
+
+function WeatherTrend({ forecast }: { forecast: WeatherForecastPoint[] }) {
+  if (forecast.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="twin-weather-trend" aria-label="Next six hours weather trend">
+      <div className="twin-weather-trend__header">
+        <span>Next 6h</span>
+        <span>rain probability / wind</span>
+      </div>
+      <div className="twin-weather-trend__grid">
+        {forecast.map((point) => (
+          <div key={point.time} className="twin-weather-trend__item">
+            <time>{point.time}</time>
+            <strong>{Math.round(point.temperature)}°</strong>
+            <span>{point.rainProbability}% rain</span>
+            <i style={{ height: `${Math.max(18, Math.min(100, point.rainProbability + point.wind * 1.8))}%` }} />
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

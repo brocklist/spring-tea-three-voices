@@ -1,11 +1,17 @@
-import { Grid, Html, useTexture } from '@react-three/drei';
+import { Grid, Html, OrbitControls, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Color, DoubleSide, Group, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
-import type { TeaGardenZone } from '../../types/domain';
+import { Color, DoubleSide, Group, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import type { CameraPose, TeaGardenZone } from '../../types/domain';
 
 const mapAsset = '/assets/production/chunjian-digital-twin-map-v1.png';
 const terrainSize = { width: 16, depth: 9 };
+const overviewCameraPose: CameraPose = {
+  position: [6.55, 5.85, 7.15],
+  target: [0, 0.1, 0],
+  fov: 38,
+};
 
 interface ThreeTeaGardenSceneProps {
   zones: TeaGardenZone[];
@@ -130,30 +136,93 @@ function Terrain({ onReady }: { onReady: () => void }) {
   );
 }
 
-function CameraRig({ focusOffset, resetToken }: { focusOffset: [number, number, number]; resetToken: number }) {
-  const { camera, pointer } = useThree();
-  const focus = useRef(new Vector3(0, 0, 0));
-  const target = useRef(new Vector3(0, 0, 0));
+function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: number }) {
+  const { camera } = useThree();
+  const controls = useRef<OrbitControlsImpl>(null);
+  const focus = useRef(new Vector3(...overviewCameraPose.target));
+  const targetFocus = useRef(new Vector3(...overviewCameraPose.target));
+  const targetPosition = useRef(new Vector3(...overviewCameraPose.position));
+  const targetFov = useRef(overviewCameraPose.fov);
+  const isFlying = useRef(true);
   const reducedMotion = useRef(false);
+  const [controlsEnabled, setControlsEnabled] = useState(false);
 
   useEffect(() => {
-    reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(pointer: coarse)').matches;
+    reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, []);
 
   useEffect(() => {
-    target.current.set(focusOffset[0], focusOffset[1], focusOffset[2]);
-  }, [focusOffset, resetToken]);
+    targetPosition.current.set(...pose.position);
+    targetFocus.current.set(...pose.target);
+    targetFov.current = pose.fov;
+    isFlying.current = true;
+    setControlsEnabled(false);
+    if (controls.current) {
+      controls.current.enabled = false;
+    }
+  }, [pose, resetToken]);
 
   useFrame((_, delta) => {
-    const parallaxX = reducedMotion.current ? 0 : pointer.x * 0.32;
-    const parallaxY = reducedMotion.current ? 0 : pointer.y * 0.14;
-    const desiredPosition = new Vector3(7.55 + parallaxX, 7.25 + parallaxY, 8.2 - parallaxX * 0.28);
-    camera.position.lerp(desiredPosition, 1 - Math.exp(-delta * 2.4));
-    focus.current.lerp(target.current, 1 - Math.exp(-delta * 3.4));
-    camera.lookAt(focus.current);
+    const perspectiveCamera = camera as PerspectiveCamera;
+    const orbit = controls.current;
+
+    if (isFlying.current) {
+      const motionRate = reducedMotion.current ? 28 : 2.7;
+      const focusRate = reducedMotion.current ? 28 : 3.1;
+      const interpolation = 1 - Math.exp(-delta * motionRate);
+      const focusInterpolation = 1 - Math.exp(-delta * focusRate);
+
+      camera.position.lerp(targetPosition.current, interpolation);
+      focus.current.lerp(targetFocus.current, focusInterpolation);
+      perspectiveCamera.fov += (targetFov.current - perspectiveCamera.fov) * interpolation;
+      perspectiveCamera.updateProjectionMatrix();
+      camera.lookAt(focus.current);
+
+      if (orbit) {
+        orbit.target.copy(focus.current);
+        orbit.update();
+      }
+
+      const settled = camera.position.distanceTo(targetPosition.current) < 0.025
+        && focus.current.distanceTo(targetFocus.current) < 0.025
+        && Math.abs(perspectiveCamera.fov - targetFov.current) < 0.08;
+
+      if (settled) {
+        camera.position.copy(targetPosition.current);
+        focus.current.copy(targetFocus.current);
+        perspectiveCamera.fov = targetFov.current;
+        perspectiveCamera.updateProjectionMatrix();
+        if (orbit) {
+          orbit.target.copy(focus.current);
+          orbit.enabled = true;
+          setControlsEnabled(true);
+          orbit.update();
+        }
+        isFlying.current = false;
+      }
+      return;
+    }
+
+    orbit?.update();
   });
 
-  return null;
+  return (
+    <OrbitControls
+      ref={controls}
+      enabled={controlsEnabled}
+      enablePan={false}
+      enableDamping
+      dampingFactor={0.07}
+      minDistance={4.6}
+      maxDistance={13}
+      minPolarAngle={0.56}
+      maxPolarAngle={1.2}
+      minAzimuthAngle={-1.2}
+      maxAzimuthAngle={1.2}
+      rotateSpeed={0.48}
+      zoomSpeed={0.68}
+    />
+  );
 }
 
 function ScanLines() {
@@ -230,7 +299,7 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
       </Suspense>
       <ScanLines />
       {zones.map((zone) => <ZoneMarker key={zone.id} zone={zone} selected={zone.id === selectedZoneId} onSelect={() => onZoneSelect(zone.id)} />)}
-      <CameraRig focusOffset={focusedZone?.focusOffset ?? [0, 0, 0]} resetToken={resetToken} />
+      <CameraController pose={focusedZone?.cameraPose ?? overviewCameraPose} resetToken={resetToken} />
     </>
   );
 }
@@ -255,7 +324,7 @@ export function ThreeTeaGardenScene({ zones, selectedZoneId, focusedZoneId, rese
     <SceneErrorBoundary fallback={fallback}>
       <Canvas
         className="twin-canvas"
-        camera={{ position: [7.55, 7.25, 8.2], fov: 42, near: 0.1, far: 40 }}
+        camera={{ position: overviewCameraPose.position, fov: overviewCameraPose.fov, near: 0.1, far: 40 }}
         dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? [1, 1] : [1, 1.45]}
         frameloop={isVisible ? 'always' : 'never'}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
