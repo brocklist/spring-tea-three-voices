@@ -18,6 +18,20 @@ export interface SensorMetric {
   trend: Trend;
 }
 
+export interface TeaGardenZone {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  status: string;
+  risk: string;
+  area: string;
+  temperature: string;
+  humidity: string;
+  soilMoisture: string;
+  action: string;
+}
+
 export interface PestDetectionResult {
   imageUrl?: string;
   pestType: string;

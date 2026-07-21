@@ -11,14 +11,16 @@ interface WeatherLocationSelectorProps {
   location: WeatherLocation;
   loading?: boolean;
   error?: string;
+  compact?: boolean;
   onChange: (location: WeatherLocation) => void;
 }
 
-export function WeatherLocationSelector({ location, loading = false, error, onChange }: WeatherLocationSelectorProps) {
+export function WeatherLocationSelector({ location, loading = false, error, compact = false, onChange }: WeatherLocationSelectorProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<WeatherLocation[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string>();
+  const [isExpanded, setIsExpanded] = useState(!compact);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,6 +45,9 @@ export function WeatherLocationSelector({ location, loading = false, error, onCh
     setResults([]);
     setQuery('');
     setSearchError(undefined);
+    if (compact) {
+      setIsExpanded(false);
+    }
   }
 
   return (
@@ -56,8 +61,19 @@ export function WeatherLocationSelector({ location, loading = false, error, onCh
           <p className="mt-3 text-2xl font-black text-tea-ink">{formatLocationName(location)}</p>
           <p className="mt-1 text-sm font-semibold text-tea-ink/58">{loading ? '正在更新实时天气' : '已连接实时天气'}</p>
         </div>
+        {compact ? (
+          <button
+            type="button"
+            onClick={() => setIsExpanded((value) => !value)}
+            aria-expanded={isExpanded}
+            className="rounded-xl border border-tea-leaf/20 bg-white/80 px-3 py-2 text-xs font-black text-tea-leaf transition hover:bg-tea-mist"
+          >
+            {isExpanded ? '收起地点' : '切换地点'}
+          </button>
+        ) : null}
       </div>
 
+      {isExpanded ? <>
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3 sm:flex-row">
         <input
           value={query}
@@ -105,6 +121,8 @@ export function WeatherLocationSelector({ location, loading = false, error, onCh
           ))}
         </div>
       ) : null}
+
+      </> : null}
 
       {searchError || error ? <p className="mt-3 text-sm font-bold text-tea-clay">{searchError ?? error}</p> : null}
       <p className="mt-4 text-xs font-semibold text-tea-ink/42">

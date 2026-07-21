@@ -98,3 +98,274 @@ select {
 .elder-care-mode {
   font-size: 18px;
 }
+
+.production-dashboard {
+  min-height: calc(100vh - 65px);
+  overflow: hidden;
+  color: #effff8;
+  background-color: #061510;
+  background-image:
+    linear-gradient(rgba(57, 255, 196, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 196, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+.dashboard-shell {
+  margin-inline: auto;
+  max-width: 112rem;
+  padding: 1.25rem 1rem 4rem;
+}
+
+.dashboard-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(167, 243, 208, 0.14);
+  background: rgba(8, 33, 25, 0.74);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 20px 48px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.dashboard-panel::before {
+  position: absolute;
+  top: 0;
+  left: 1.25rem;
+  width: 3rem;
+  height: 2px;
+  content: '';
+  background: #34d399;
+  box-shadow: 0 0 18px rgba(52, 211, 153, 0.9);
+}
+
+.dashboard-kicker {
+  color: #74f0c0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.garden-radar {
+  position: relative;
+  min-height: 430px;
+  overflow: hidden;
+  border: 1px solid rgba(94, 234, 212, 0.16);
+  background:
+    linear-gradient(135deg, rgba(4, 25, 20, 0.96), rgba(8, 48, 35, 0.72)),
+    repeating-linear-gradient(0deg, rgba(99, 255, 202, 0.08) 0 1px, transparent 1px 48px),
+    repeating-linear-gradient(90deg, rgba(99, 255, 202, 0.08) 0 1px, transparent 1px 48px);
+}
+
+.garden-radar::before,
+.garden-radar::after {
+  position: absolute;
+  inset: 50%;
+  width: 76%;
+  aspect-ratio: 1;
+  content: '';
+  border: 1px solid rgba(94, 234, 212, 0.18);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.garden-radar::after {
+  width: 48%;
+  border-color: rgba(94, 234, 212, 0.24);
+  box-shadow: 0 0 0 11vw rgba(16, 185, 129, 0.025), 0 0 0 22vw rgba(16, 185, 129, 0.018);
+}
+
+.radar-crosshair::before,
+.radar-crosshair::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  content: '';
+  background: rgba(110, 231, 183, 0.2);
+  transform: translate(-50%, -50%);
+}
+
+.radar-crosshair::before {
+  width: 1px;
+  height: 86%;
+}
+
+.radar-crosshair::after {
+  width: 86%;
+  height: 1px;
+}
+
+.radar-scan {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(52, 211, 153, 0.2), transparent 15%, transparent 100%);
+  transform-origin: 0 0;
+  animation: radar-spin 7s linear infinite;
+}
+
+.radar-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 78px;
+  height: 78px;
+  place-items: center;
+  border: 1px solid rgba(110, 231, 183, 0.45);
+  border-radius: 50%;
+  color: #d1fae5;
+  background: rgba(5, 40, 29, 0.88);
+  box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.08), 0 0 28px rgba(52, 211, 153, 0.22);
+  transform: translate(-50%, -50%);
+}
+
+.radar-marker {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  max-width: min(14rem, 42%);
+  padding: 0.45rem 0.65rem 0.45rem 0.45rem;
+  border: 1px solid rgba(134, 239, 172, 0.28);
+  border-radius: 0.75rem;
+  color: #ecfdf5;
+  background: rgba(8, 54, 38, 0.84);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  transform: translate(-50%, -50%);
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.radar-marker:hover,
+.radar-marker:focus-visible,
+.radar-marker.is-selected {
+  border-color: rgba(94, 234, 212, 0.92);
+  outline: none;
+  background: rgba(9, 78, 53, 0.96);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12), 0 12px 30px rgba(0, 0, 0, 0.26);
+}
+
+.radar-marker-dot {
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #052e20;
+  background: #5eead4;
+  box-shadow: 0 0 16px rgba(94, 234, 212, 0.72);
+}
+
+.production-dashboard .tea-card {
+  border-color: rgba(167, 243, 208, 0.14);
+  background: rgba(8, 33, 25, 0.76);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 18px 42px rgba(0, 0, 0, 0.14);
+}
+
+.production-dashboard .tea-footer {
+  border-top-color: rgba(167, 243, 208, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.production-dashboard .tech-panel {
+  border-color: rgba(94, 234, 212, 0.16);
+  background: linear-gradient(135deg, rgba(5, 26, 20, 0.98), rgba(8, 57, 41, 0.9));
+  box-shadow: 0 24px 68px rgba(0, 0, 0, 0.24);
+}
+
+.production-dashboard .text-tea-ink {
+  color: #effff8;
+}
+
+.production-dashboard .text-tea-ink\/42,
+.production-dashboard .text-tea-ink\/48,
+.production-dashboard .text-tea-ink\/54,
+.production-dashboard .text-tea-ink\/56,
+.production-dashboard .text-tea-ink\/58,
+.production-dashboard .text-tea-ink\/60,
+.production-dashboard .text-tea-ink\/62,
+.production-dashboard .text-tea-ink\/64,
+.production-dashboard .text-tea-ink\/66,
+.production-dashboard .text-tea-ink\/68,
+.production-dashboard .text-tea-ink\/70,
+.production-dashboard .text-tea-ink\/72 {
+  color: rgba(222, 255, 239, 0.67);
+}
+
+.production-dashboard .text-tea-leaf {
+  color: #6ee7b7;
+}
+
+.production-dashboard .bg-tea-mist,
+.production-dashboard .bg-\[\#f7fbf3\] {
+  background-color: rgba(74, 222, 128, 0.1);
+}
+
+.production-dashboard .bg-white,
+.production-dashboard .bg-white\/80,
+.production-dashboard .bg-white\/78,
+.production-dashboard .bg-white\/88 {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.production-dashboard input,
+.production-dashboard textarea,
+.production-dashboard select {
+  border-color: rgba(167, 243, 208, 0.18);
+  color: #ecfdf5;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.production-dashboard input::placeholder,
+.production-dashboard textarea::placeholder {
+  color: rgba(209, 250, 229, 0.38);
+}
+
+.production-dashboard .dashboard-article {
+  border: 1px solid rgba(167, 243, 208, 0.14);
+  background: rgba(8, 33, 25, 0.74);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 18px 42px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes radar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1279px) {
+  .garden-radar {
+    min-height: 380px;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-shell {
+    padding-inline: 0.75rem;
+  }
+
+  .garden-radar {
+    min-height: 360px;
+  }
+
+  .radar-marker {
+    width: 2rem;
+    height: 2rem;
+    justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .radar-marker-label {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-scan {
+    animation: none;
+  }
+}

@@ -1,16 +1,14 @@
-import { Activity, BrainCircuit, CloudSun, DatabaseZap, Leaf, Radar, ShieldCheck, Waves } from 'lucide-react';
+import { Activity, BrainCircuit, CloudSun, DatabaseZap, Leaf, MapPinned, Radar, ShieldCheck, Sprout, Waves } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MetricCard } from '../components/production/MetricCard';
 import { KnowledgeHubPanel } from '../components/production/KnowledgeHubPanel';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
-import { Hero } from '../components/ui/Hero';
-import { SectionHeader } from '../components/ui/SectionHeader';
-import { heroAssets, knowledgeArticles, sensorMetrics, weatherMetrics } from '../data/mockData';
+import { heroAssets, knowledgeArticles, sensorMetrics, teaGardenZones, weatherMetrics } from '../data/mockData';
 import { defaultWeatherLocation, fetchWeatherMetrics, formatLocationName, type WeatherLocation } from '../lib/weather';
-import type { WeatherMetric } from '../types/domain';
+import type { TeaGardenZone, WeatherMetric } from '../types/domain';
 
 const operationHighlights = [
   { label: '今日作业窗口', value: '06:30 - 10:30', note: '适宜采摘与巡园', icon: CloudSun },
@@ -42,6 +40,9 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string>();
+  const [selectedZoneId, setSelectedZoneId] = useState(teaGardenZones[0].id);
+  const [now, setNow] = useState(() => new Date());
+  const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
 
   useEffect(() => {
     let ignore = false;
@@ -54,10 +55,15 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         const metrics = await fetchWeatherMetrics(weatherLocation);
         if (!ignore) {
           setLiveWeatherMetrics(metrics);
+          lastSuccessfulWeatherLocation.current = weatherLocation;
         }
       } catch {
         if (!ignore) {
-          setWeatherError('实时天气暂时不可用，已保留最近一次数据');
+          const fallbackLocation = lastSuccessfulWeatherLocation.current;
+          setWeatherError(`实时天气暂时不可用，已恢复至${formatLocationName(fallbackLocation)}的最近一次数据`);
+          setWeatherLocation((currentLocation) =>
+            currentLocation.id === weatherLocation.id ? fallbackLocation : currentLocation,
+          );
         }
       } finally {
         if (!ignore) {
@@ -75,6 +81,11 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
     };
   }, [weatherLocation]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   if (careMode) {
     return (
       <ElderCareProductionPage
@@ -87,151 +98,210 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
     );
   }
 
+  const selectedZone = teaGardenZones.find((zone) => zone.id === selectedZoneId) ?? teaGardenZones[0];
+
   return (
-    <>
-      <Hero
-        eyebrow="数智茶鸣｜智慧生产"
-        title="让春建茶园会感知、会预警、会生长"
-        description="围绕气象环境、土壤传感、叶片图像识别与农技知识服务，构建面向茶农和茶园管理者的智慧生产驾驶舱。"
-        imageUrl={heroAssets.production}
-        primaryLabel="查看茶园态势"
-        secondaryLabel="进入智能识别"
-      />
-
-      <section id="primary-section" className="section-shell py-16">
-        <div className="grid gap-8 xl:grid-cols-[0.78fr_1.22fr]">
-          <div className="tea-card rounded-[2rem] p-6 lg:p-7">
-            <div className="inline-flex items-center gap-2 rounded-full bg-tea-mist px-3 py-1 text-xs font-black text-tea-leaf">
-              <Waves className="h-3.5 w-3.5" />
-              春建茶园态势
-            </div>
-            <h2 className="mt-5 text-3xl font-black tracking-tight text-tea-ink sm:text-4xl">一屏掌握今日茶园生产节奏</h2>
-            <p className="mt-4 text-base leading-7 text-tea-ink/66">
-              结合天气变化、土壤状态、叶面风险和农事建议，帮助茶农更快判断采摘、巡园、排湿、施肥等关键动作。
-            </p>
-            <div className="mt-7 grid gap-3">
-              {operationHighlights.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.label} className="tea-footer flex items-center gap-4 rounded-2xl p-4">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white text-tea-leaf shadow-sm">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-black uppercase tracking-[0.18em] text-tea-ink/42">{item.label}</p>
-                      <p className="mt-1 text-xl font-black text-tea-ink">{item.value}</p>
-                    </div>
-                    <p className="hidden text-sm font-bold text-tea-leaf sm:block">{item.note}</p>
-                  </div>
-                );
-              })}
-            </div>
+    <div className="production-dashboard">
+      <main className="dashboard-shell">
+        <header className="flex flex-col gap-4 border-b border-emerald-100/10 pb-5 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+          <div className="flex items-center gap-3 text-sm font-bold text-emerald-100/62">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-200/16 bg-emerald-300/8 text-emerald-200">
+              <Sprout className="h-4 w-4" />
+            </span>
+            <span>数智茶鸣｜智慧生产</span>
           </div>
+          <div className="text-left lg:text-center">
+            <p className="dashboard-kicker">Chunjian smart tea garden</p>
+            <h1 className="mt-1 text-2xl font-black tracking-wide text-white sm:text-3xl">春建乡智慧茶园生产驾驶舱</h1>
+          </div>
+          <div className="text-left text-sm font-bold text-emerald-50/62 lg:text-right">
+            <p>{now.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' })}</p>
+            <p className="mt-1 text-lg tracking-[0.12em] text-emerald-100">{now.toLocaleTimeString('zh-CN', { hour12: false })}</p>
+          </div>
+        </header>
 
-          <div>
-            <SectionHeader
-              eyebrow="Field Climate"
-              title="气象与茶园环境监测"
-              description={`实时天气来自用户选择的地点：${formatLocationName(weatherLocation)}。天气、温湿度、降雨与风力数据集中展示，为采摘排班和病害预防提供判断依据。`}
-            />
-            <div className="mt-6">
+        <section id="primary-section" className="pt-6">
+          <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-[minmax(245px,0.78fr)_minmax(460px,1.35fr)_minmax(285px,0.86fr)]">
+            <aside className="grid content-start gap-5 lg:order-2 xl:order-none">
+              <article className="dashboard-panel rounded-2xl p-5">
+                <p className="dashboard-kicker">Production overview</p>
+                <h2 className="mt-3 text-2xl font-black text-white">今日茶园态势</h2>
+                <p className="mt-3 text-sm leading-6 text-emerald-50/62">天气、土壤与叶面风险共同形成今日生产建议。</p>
+                <div className="mt-5 grid gap-2">
+                  {operationHighlights.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={item.label} className="flex items-center gap-3 border-t border-white/7 py-3 first:border-t-0 first:pt-0">
+                        <Icon className="h-4 w-4 shrink-0 text-emerald-300" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-emerald-50/46">{item.label}</p>
+                          <p className="mt-1 text-lg font-black text-white">{item.value}</p>
+                        </div>
+                        <span className="text-right text-xs font-bold leading-5 text-emerald-200/76">{item.note}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+
+              <ZoneDetail zone={selectedZone} />
+            </aside>
+
+            <div className="lg:order-1 lg:col-span-2 xl:order-none xl:col-span-1">
+              <GardenRadar selectedZoneId={selectedZone.id} onZoneChange={setSelectedZoneId} />
+            </div>
+
+            <aside className="grid content-start gap-5 lg:order-3 xl:order-none">
               <WeatherLocationSelector
+                compact
                 location={weatherLocation}
                 loading={weatherLoading}
                 error={weatherError}
                 onChange={setWeatherLocation}
               />
-            </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {liveWeatherMetrics.map((metric) => (
-                <MetricCard key={metric.id} metric={metric} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section-shell pb-16">
-        <div className="tech-panel overflow-hidden rounded-[2rem] p-6 sm:p-8 lg:p-9">
-          <div className="pointer-events-none absolute" />
-          <div className="grid gap-8 lg:grid-cols-[0.88fr_1.12fr]">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/8 px-3 py-1 text-xs font-bold text-tea-spring">
-                <DatabaseZap className="h-4 w-4" />
-                Tea Garden Sensor Hub
-              </div>
-              <h2 className="mt-5 text-3xl font-black text-white sm:text-4xl">茶园传感器驾驶舱</h2>
-              <p className="mt-4 text-base leading-7 text-white/70">
-                土壤酸碱度、湿度、冠层温度、光照强度以卡片化方式呈现，方便快速判断茶树生长环境是否处在适宜区间。
-              </p>
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/8 p-4 text-white">
-                  <BrainCircuit className="h-5 w-5 text-tea-spring" />
-                  <p className="mt-3 text-sm font-bold text-white/58">智能分析</p>
-                  <p className="mt-1 text-lg font-black">识别异常趋势</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/8 p-4 text-white">
-                  <Leaf className="h-5 w-5 text-tea-spring" />
-                  <p className="mt-3 text-sm font-bold text-white/58">农事响应</p>
-                  <p className="mt-1 text-lg font-black">辅助巡园决策</p>
-                </div>
-              </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {sensorMetrics.map((metric) => (
-                <SensorGauge key={metric.id} metric={metric} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section-shell pb-16">
-        <SectionHeader
-          eyebrow="Leaf Health"
-          title="叶片健康识别"
-          description="上传茶叶叶片图片后，系统展示识别类型、置信度、简要说明与处理建议，辅助茶农快速形成巡护判断。"
-        />
-        <div className="mt-8">
-          <PestDetectionPanel />
-        </div>
-      </section>
-
-      <section id="resource-slots" className="section-shell pb-20">
-        <SectionHeader
-          eyebrow="Agronomy Guide"
-          title="农业知识辅助"
-          description="围绕种植管理、施肥建议和病虫害防治整理农技内容，为茶园日常管护提供清晰参考。"
-        />
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {knowledgeArticles.map((article, index) => (
-            <motion.article
-              key={article.id}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-80px' }}
-              transition={{ duration: 0.42, delay: index * 0.06 }}
-              className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-tea-mist text-tea-leaf">
-                {index === 0 ? <Leaf className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
-              </div>
-              <p className="mt-5 text-sm font-bold text-tea-leaf">{article.category}</p>
-              <h3 className="mt-2 text-xl font-black text-tea-ink">{article.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-tea-ink/66">{article.summary}</p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {article.tags.map((tag) => (
-                  <span key={tag} className="rounded-full bg-tea-mist px-3 py-1 text-xs font-bold text-tea-ink/58">
-                    {tag}
-                  </span>
+              <div className="grid grid-cols-2 gap-3">
+                {liveWeatherMetrics.map((metric, index) => (
+                  <div key={metric.id} className={index === liveWeatherMetrics.length - 1 ? 'col-span-2' : ''}>
+                    <MetricCard metric={metric} />
+                  </div>
                 ))}
               </div>
-            </motion.article>
-          ))}
+            </aside>
+          </div>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {sensorMetrics.map((metric) => (
+              <SensorGauge key={metric.id} metric={metric} />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <DashboardSectionHeader
+            eyebrow="Leaf health intelligence"
+            title="叶片健康识别"
+            description="上传样本或进入演示识别，快速查看病害类型、置信度、重点部位与处理建议。"
+          />
+          <div className="mt-5">
+            <PestDetectionPanel />
+          </div>
+        </section>
+
+        <section id="resource-slots" className="mt-12">
+          <DashboardSectionHeader
+            eyebrow="Agronomy knowledge hub"
+            title="农业知识辅助"
+            description="将种植管理、病虫害防治与权威农技来源集中为可继续扩展的茶园知识入口。"
+          />
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {knowledgeArticles.map((article, index) => (
+              <motion.article
+                key={article.id}
+                initial={{ opacity: 0, y: 18 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-80px' }}
+                transition={{ duration: 0.42, delay: index * 0.06 }}
+                className="dashboard-article rounded-2xl p-5 transition hover:-translate-y-1"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-tea-mist text-tea-leaf">
+                  {index === 0 ? <Leaf className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+                </div>
+                <p className="mt-5 text-sm font-bold text-tea-leaf">{article.category}</p>
+                <h3 className="mt-2 text-xl font-black text-tea-ink">{article.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-tea-ink/66">{article.summary}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {article.tags.map((tag) => (
+                    <span key={tag} className="rounded-full bg-tea-mist px-3 py-1 text-xs font-bold text-tea-ink/58">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </motion.article>
+            ))}
+          </div>
+          <KnowledgeHubPanel />
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function DashboardSectionHeader({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
+  return (
+    <div className="dashboard-panel rounded-2xl px-5 py-5 sm:flex sm:items-end sm:justify-between sm:gap-8">
+      <div>
+        <p className="dashboard-kicker">{eyebrow}</p>
+        <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">{title}</h2>
+      </div>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/62 sm:mt-0">{description}</p>
+    </div>
+  );
+}
+
+function GardenRadar({ selectedZoneId, onZoneChange }: { selectedZoneId: string; onZoneChange: (zoneId: string) => void }) {
+  return (
+    <article className="dashboard-panel rounded-2xl p-3 sm:p-4">
+      <div className="mb-3 flex items-center justify-between gap-3 px-1">
+        <div>
+          <p className="dashboard-kicker">Garden zone radar</p>
+          <h2 className="mt-1 text-lg font-black text-white">茶园片区实时态势</h2>
         </div>
-        <KnowledgeHubPanel />
-      </section>
-    </>
+        <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-100/58"><span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />监测在线</span>
+      </div>
+      <div className="garden-radar rounded-xl">
+        <div className="radar-crosshair absolute inset-0" />
+        <div className="radar-scan" />
+        <div className="radar-center"><Radar className="h-7 w-7" /></div>
+        {teaGardenZones.map((zone) => (
+          <button
+            key={zone.id}
+            type="button"
+            onClick={() => onZoneChange(zone.id)}
+            className={['radar-marker', zone.id === selectedZoneId ? 'is-selected' : ''].join(' ')}
+            style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
+            aria-pressed={zone.id === selectedZoneId}
+            aria-label={`查看${zone.name}片区详情`}
+          >
+            <span className="radar-marker-dot"><MapPinned className="h-3.5 w-3.5" /></span>
+            <span className="radar-marker-label text-left"><span className="block text-xs font-black">{zone.name}</span><span className="mt-0.5 block text-[10px] font-bold text-emerald-100/60">{zone.status}</span></span>
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function ZoneDetail({ zone }: { zone: TeaGardenZone }) {
+  return (
+    <article className="dashboard-panel rounded-2xl p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="dashboard-kicker">Selected zone</p>
+          <h2 className="mt-2 text-2xl font-black text-white">{zone.name}</h2>
+        </div>
+        <span className="rounded-full border border-emerald-200/18 bg-emerald-300/8 px-3 py-1 text-xs font-black text-emerald-100">{zone.status}</span>
+      </div>
+      <p className="mt-4 rounded-xl border border-amber-200/12 bg-amber-100/5 px-3 py-2 text-sm font-bold text-amber-100/88">{zone.risk}</p>
+      <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+        <ZoneMetric label="管理面积" value={zone.area} />
+        <ZoneMetric label="环境温度" value={zone.temperature} />
+        <ZoneMetric label="空气湿度" value={zone.humidity} />
+        <ZoneMetric label="土壤湿度" value={zone.soilMoisture} />
+      </div>
+      <div className="mt-5 border-t border-white/8 pt-4">
+        <p className="text-xs font-bold text-emerald-100/42">建议动作</p>
+        <p className="mt-2 text-sm font-semibold leading-6 text-emerald-50/78">{zone.action}</p>
+      </div>
+    </article>
+  );
+}
+
+function ZoneMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-white/8 bg-white/[0.035] p-3">
+      <p className="text-xs font-bold text-emerald-50/44">{label}</p>
+      <p className="mt-2 text-lg font-black text-white">{value}</p>
+    </div>
   );
 }
 
