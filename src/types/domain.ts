@@ -21,8 +21,9 @@ export interface SensorMetric {
 export interface TeaGardenZone {
   id: string;
   name: string;
-  x: number;
-  y: number;
+  position: [number, number, number];
+  focusOffset: [number, number, number];
+  markerTone: 'mint' | 'cyan' | 'gold';
   status: string;
   risk: string;
   area: string;
