@@ -1,5 +1,5 @@
 import { Activity, BrainCircuit, CloudSun, DatabaseZap, LayoutPanelTop, Leaf, MapPinned, Radar, RotateCcw, ScanSearch, ShieldCheck, Sprout, Waves } from 'lucide-react';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FloatingDashboardWindow, type DashboardPanelId, type DashboardWindowPosition } from '../components/production/FloatingDashboardWindow';
 import { KnowledgeHubPanel } from '../components/production/KnowledgeHubPanel';
 import { MetricCard } from '../components/production/MetricCard';
@@ -30,23 +30,29 @@ interface DashboardWindowState {
   open: boolean;
   minimized: boolean;
   position: DashboardWindowPosition;
-  zIndex: number;
 }
 
 type DashboardWindowStates = Record<DashboardPanelId, DashboardWindowState>;
+const dashboardPanels: DashboardPanelId[] = ['overview', 'weather', 'sensors', 'zone', 'leaf', 'knowledge'];
+
+function getWindowWidth(panel: DashboardPanelId, viewportWidth: number) {
+  const compact = viewportWidth <= 1023;
+  const preferredWidth = panel === 'zone' || panel === 'leaf' || panel === 'knowledge' ? (compact ? 400 : 560) : (compact ? 336 : 352);
+  return Math.min(preferredWidth, viewportWidth - 24);
+}
 
 function createWindowStates(): DashboardWindowStates {
   const viewportWidth = typeof window === 'undefined' ? 1440 : window.innerWidth;
-  const compact = viewportWidth < 720;
-  const rightColumn = Math.max(compact ? 28 : 800, viewportWidth - (compact ? 340 : 366));
+  const compact = viewportWidth <= 1023;
+  const right = (panel: DashboardPanelId) => Math.max(12, viewportWidth - getWindowWidth(panel, viewportWidth) - 16);
 
   return {
-    overview: { open: true, minimized: false, position: { x: compact ? 12 : 18, y: compact ? 88 : 94 }, zIndex: 12 },
-    weather: { open: !compact, minimized: false, position: { x: rightColumn, y: compact ? 130 : 94 }, zIndex: 11 },
-    sensors: { open: false, minimized: false, position: { x: compact ? 26 : 36, y: compact ? 180 : 168 }, zIndex: 10 },
-    zone: { open: false, minimized: false, position: { x: compact ? 32 : 80, y: compact ? 214 : 150 }, zIndex: 13 },
-    leaf: { open: false, minimized: false, position: { x: compact ? 22 : rightColumn - 160, y: compact ? 244 : 140 }, zIndex: 10 },
-    knowledge: { open: false, minimized: false, position: { x: compact ? 16 : rightColumn - 220, y: compact ? 276 : 174 }, zIndex: 10 },
+    overview: { open: true, minimized: false, position: { x: 16, y: compact ? 76 : 88 } },
+    weather: { open: !compact, minimized: false, position: { x: right('weather'), y: compact ? 108 : 88 } },
+    sensors: { open: false, minimized: false, position: { x: compact ? 16 : 38, y: compact ? 146 : 162 } },
+    zone: { open: false, minimized: false, position: { x: compact ? 16 : 72, y: compact ? 180 : 138 } },
+    leaf: { open: false, minimized: false, position: { x: right('leaf'), y: compact ? 212 : 132 } },
+    knowledge: { open: false, minimized: false, position: { x: right('knowledge'), y: compact ? 244 : 164 } },
   };
 }
 
@@ -64,6 +70,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
   const [now, setNow] = useState(() => new Date());
   const [windowStates, setWindowStates] = useState<DashboardWindowStates>(createWindowStates);
+  const [windowOrder, setWindowOrder] = useState<DashboardPanelId[]>(dashboardPanels);
   const [sceneResetToken, setSceneResetToken] = useState(0);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
 
@@ -120,14 +127,17 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   }
 
   const selectedZone = teaGardenZones.find((zone) => zone.id === selectedZoneId) ?? teaGardenZones[0];
-  const openPanels = Object.fromEntries(
+  const openPanels = useMemo(() => Object.fromEntries(
     Object.entries(windowStates).map(([panel, state]) => [panel, state.open]),
-  ) as Record<DashboardPanelId, boolean>;
+  ) as Record<DashboardPanelId, boolean>, [windowStates]);
+  const bringToFront = useCallback((panel: DashboardPanelId) => {
+    setWindowOrder((current) => [...current.filter((item) => item !== panel), panel]);
+  }, []);
   const windowProps = (panel: DashboardPanelId) => ({
     isOpen: windowStates[panel].open,
     minimized: windowStates[panel].minimized,
     position: windowStates[panel].position,
-    zIndex: windowStates[panel].zIndex,
+    zIndex: 12 + windowOrder.indexOf(panel),
     onClose: () => closePanel(panel),
     onMinimize: () => minimizePanel(panel),
     onFocus: () => focusWindow(panel),
@@ -143,35 +153,19 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   }
 
   function openPanel(panel: DashboardPanelId) {
-    setWindowStates((current) => {
-      const target = current[panel];
-      const highestZ = Math.max(...Object.values(current).map((windowState) => windowState.zIndex));
-      return {
-        ...current,
-        [panel]: {
-          ...target,
-          open: true,
-          minimized: false,
-          zIndex: highestZ + 1,
-        },
-      };
-    });
+    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], open: true, minimized: false } }));
+    bringToFront(panel);
   }
 
   function selectZone(zoneId: string) {
     setSelectedZoneId(zoneId);
     setFocusedZoneId(zoneId);
-    setWindowStates((current) => {
-      const highestZ = Math.max(...Object.values(current).map((windowState) => windowState.zIndex));
-      return { ...current, zone: { ...current.zone, open: true, minimized: false, zIndex: highestZ + 1 } };
-    });
+    setWindowStates((current) => ({ ...current, zone: { ...current.zone, open: true, minimized: false } }));
+    bringToFront('zone');
   }
 
   function focusWindow(panel: DashboardPanelId) {
-    setWindowStates((current) => {
-      const highestZ = Math.max(...Object.values(current).map((windowState) => windowState.zIndex));
-      return { ...current, [panel]: { ...current[panel], zIndex: highestZ + 1 } };
-    });
+    bringToFront(panel);
   }
 
   function updateWindowPosition(panel: DashboardPanelId, position: DashboardWindowPosition) {
@@ -180,6 +174,7 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
 
   function resetWindowLayout() {
     setWindowStates(createWindowStates());
+    setWindowOrder(dashboardPanels);
   }
 
   function resetScene() {

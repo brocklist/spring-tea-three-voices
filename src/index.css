@@ -1064,3 +1064,29 @@ select {
     animation: none;
   }
 }
+
+.twin-topbar,
+.twin-toolbar {
+  background: linear-gradient(115deg, rgba(1, 23, 14, 0.72), rgba(2, 47, 29, 0.46));
+  backdrop-filter: blur(14px);
+}
+
+.twin-window {
+  will-change: transform;
+  background:
+    linear-gradient(145deg, rgba(10, 55, 36, 0.7), rgba(1, 17, 11, 0.56) 55%, rgba(2, 31, 19, 0.62)),
+    rgba(1, 15, 9, 0.54);
+  box-shadow: inset 0 1px 0 rgba(217, 255, 237, 0.12), inset 0 0 26px rgba(54, 255, 174, 0.045), 0 18px 48px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(12px) saturate(112%);
+}
+
+.twin-window.is-dragging {
+  opacity: 0.96;
+  box-shadow: inset 0 1px 0 rgba(217, 255, 237, 0.16), 0 12px 30px rgba(0, 0, 0, 0.24);
+  backdrop-filter: none;
+}
+
+.twin-window__header:focus-visible {
+  outline: 2px solid rgba(135, 255, 211, 0.9);
+  outline-offset: -3px;
+}

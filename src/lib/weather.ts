@@ -125,7 +125,7 @@ export async function fetchWeatherDashboard(location: WeatherLocation): Promise<
     'hourly',
     ['temperature_2m', 'relative_humidity_2m', 'precipitation_probability', 'wind_speed_10m'].join(','),
   );
-  url.searchParams.set('forecast_days', '1');
+  url.searchParams.set('forecast_days', '2');
   url.searchParams.set('timezone', 'auto');
 
   const response = await fetch(url);
@@ -188,12 +188,13 @@ export async function fetchWeatherDashboard(location: WeatherLocation): Promise<
   ];
 
   const hourly = data.hourly;
-  const currentHourIndex = hourly?.time?.findIndex((time) => new Date(time).getTime() >= Date.now() - 30 * 60 * 1000) ?? -1;
-  const startIndex = Math.max(0, currentHourIndex);
-  const forecast = Array.from({ length: 6 }, (_, offset) => {
+  const hourlyTimes = hourly?.time ?? [];
+  const currentTimestamp = new Date(current.time).getTime();
+  const startIndex = Math.max(0, hourlyTimes.findIndex((time) => new Date(time).getTime() >= currentTimestamp));
+  const forecast = hourlyTimes.slice(startIndex, startIndex + 6).map((time, offset) => {
     const index = startIndex + offset;
     return {
-      time: formatWeatherTime(hourly?.time?.[index] ?? current.time),
+      time: formatWeatherTime(time),
       temperature: hourly?.temperature_2m?.[index] ?? temperature,
       humidity: hourly?.relative_humidity_2m?.[index] ?? humidity,
       rainProbability: hourly?.precipitation_probability?.[index] ?? 0,

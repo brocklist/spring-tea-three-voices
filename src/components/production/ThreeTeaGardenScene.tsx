@@ -1,7 +1,7 @@
 import { Grid, Html, OrbitControls, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Color, DoubleSide, Group, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
+import { Color, DoubleSide, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraPose, TeaGardenZone } from '../../types/domain';
 
@@ -86,7 +86,7 @@ class SceneErrorBoundary extends Component<{ fallback: React.ReactNode; children
 function Terrain({ onReady }: { onReady: () => void }) {
   const texture = useTexture(mapAsset);
   const geometry = useMemo(() => {
-    const nextGeometry = new PlaneGeometry(terrainSize.width, terrainSize.depth, 104, 64);
+    const nextGeometry = new PlaneGeometry(terrainSize.width, terrainSize.depth, 72, 40);
     nextGeometry.rotateX(-Math.PI / 2);
     const positions = nextGeometry.attributes.position;
 
@@ -101,7 +101,7 @@ function Terrain({ onReady }: { onReady: () => void }) {
 
   useLayoutEffect(() => {
     texture.colorSpace = SRGBColorSpace;
-    texture.anisotropy = 4;
+    texture.anisotropy = 2;
     onReady();
   }, [onReady, texture]);
 
@@ -113,7 +113,7 @@ function Terrain({ onReady }: { onReady: () => void }) {
 
   return (
     <group>
-      <mesh geometry={geometry} receiveShadow castShadow>
+      <mesh geometry={geometry}>
         <meshStandardMaterial map={texture} roughness={0.96} metalness={0.03} side={DoubleSide} />
       </mesh>
       <mesh geometry={geometry} position={[0, 0.012, 0]}>
@@ -137,7 +137,7 @@ function Terrain({ onReady }: { onReady: () => void }) {
 }
 
 function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: number }) {
-  const { camera } = useThree();
+  const { camera, invalidate } = useThree();
   const controls = useRef<OrbitControlsImpl>(null);
   const focus = useRef(new Vector3(...overviewCameraPose.target));
   const targetFocus = useRef(new Vector3(...overviewCameraPose.target));
@@ -160,7 +160,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
     if (controls.current) {
       controls.current.enabled = false;
     }
-  }, [pose, resetToken]);
+    invalidate();
+  }, [invalidate, pose, resetToken]);
 
   useFrame((_, delta) => {
     const perspectiveCamera = camera as PerspectiveCamera;
@@ -199,6 +200,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
           orbit.update();
         }
         isFlying.current = false;
+      } else {
+        invalidate();
       }
       return;
     }
@@ -211,8 +214,7 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
       ref={controls}
       enabled={controlsEnabled}
       enablePan={false}
-      enableDamping
-      dampingFactor={0.07}
+      enableDamping={false}
       minDistance={4.6}
       maxDistance={13}
       minPolarAngle={0.56}
@@ -226,21 +228,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
 }
 
 function ScanLines() {
-  const group = useRef<Group>(null);
-  const reducedMotion = useRef(false);
-
-  useEffect(() => {
-    reducedMotion.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }, []);
-
-  useFrame((_, delta) => {
-    if (group.current && !reducedMotion.current) {
-      group.current.rotation.y += delta * 0.08;
-    }
-  });
-
   return (
-    <group ref={group} position={[0, 0.08, 0]}>
+    <group position={[0, 0.08, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.15, 2.19, 96]} />
         <meshBasicMaterial color="#38e8c3" transparent opacity={0.24} side={DoubleSide} />
@@ -263,7 +252,6 @@ function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selecte
         <ringGeometry args={[0.22, 0.28, 40]} />
         <meshBasicMaterial color={color} transparent opacity={0.88} side={DoubleSide} />
       </mesh>
-      <pointLight color={color} intensity={selected ? 1.4 : 0.8} distance={3.2} />
       <Html position={[0, 0.22, 0]} center distanceFactor={10.5} zIndexRange={[3, 0]}>
         <button
           type="button"
@@ -292,8 +280,8 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
       <color attach="background" args={[new Color('#06140f')]} />
       <fog attach="fog" args={['#06140f', 10, 23]} />
       <ambientLight intensity={0.94} color="#b3ead4" />
-      <directionalLight position={[-5, 9, 4]} intensity={2.15} color="#d9f5cc" castShadow />
-      <pointLight position={[4, 3, -2]} intensity={1.1} color="#36e5c1" distance={11} />
+      <directionalLight position={[-5, 9, 4]} intensity={1.85} color="#d9f5cc" />
+      <pointLight position={[4, 3, -2]} intensity={0.75} color="#36e5c1" distance={11} />
       <Suspense fallback={null}>
         <Terrain onReady={handleReady} />
       </Suspense>
@@ -325,9 +313,9 @@ export function ThreeTeaGardenScene({ zones, selectedZoneId, focusedZoneId, rese
       <Canvas
         className="twin-canvas"
         camera={{ position: overviewCameraPose.position, fov: overviewCameraPose.fov, near: 0.1, far: 40 }}
-        dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? [1, 1] : [1, 1.45]}
-        frameloop={isVisible ? 'always' : 'never'}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 0.8 : 1.1}
+        frameloop={isVisible ? 'demand' : 'never'}
+        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
         fallback={fallback}
       >
         <TeaGardenWorld zones={zones} selectedZoneId={selectedZoneId} focusedZoneId={focusedZoneId} resetToken={resetToken} onZoneSelect={onZoneSelect} />
