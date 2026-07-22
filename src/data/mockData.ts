@@ -106,7 +106,7 @@ export const mockDetectionResult: PestDetectionResult = {
 
 export const leafDetectionDemos: PestDetectionResult[] = [
   {
-    imageUrl: '/assets/leaf-demos/anthracnose.png',
+    imageUrl: '/assets/leaf-demos/anthracnose-photo.png',
     pestType: '茶炭疽病疑似样本',
     confidence: 88,
     severity: '中等风险',
@@ -116,7 +116,7 @@ export const leafDetectionDemos: PestDetectionResult[] = [
     analysisPoints: ['褐斑集中在叶缘和叶尖', '病斑形状不规则', '高湿天气后需要加密巡园'],
   },
   {
-    imageUrl: '/assets/leaf-demos/leafhopper.png',
+    imageUrl: '/assets/leaf-demos/leafhopper-photo.jpg',
     pestType: '茶小绿叶蝉危害疑似样本',
     confidence: 82,
     severity: '轻中度风险',
@@ -126,7 +126,7 @@ export const leafDetectionDemos: PestDetectionResult[] = [
     analysisPoints: ['叶面有点状失绿', '嫩梢边缘轻微卷曲', '应检查叶背是否有活动虫体'],
   },
   {
-    imageUrl: '/assets/leaf-demos/healthy-leaf.png',
+    imageUrl: '/assets/leaf-demos/healthy-leaf-photo.jpg',
     pestType: '健康嫩叶样本',
     confidence: 94,
     severity: '低风险',
