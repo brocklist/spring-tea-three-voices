@@ -203,11 +203,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
           </div>
           <div className="command-map-panel__veil" />
           <article className="command-zone-readout">
-            <div>
-              <span className="command-zone-readout__label"><Leaf className="h-4 w-4" /> 当前选中茶园</span>
-              <h2>{selectedZone.name}</h2>
+            <div className="command-zone-readout__heading">
+              <div className="command-zone-readout__identity">
+                <span className="command-zone-readout__label"><Leaf className="h-4 w-4" /> 当前选中茶园</span>
+                <h2>{selectedZone.name}</h2>
+              </div>
+              <span className="command-zone-readout__status">{selectedZone.status}</span>
             </div>
-            <span className="command-zone-readout__status">{selectedZone.status}</span>
             <dl>
               <div><dt>温度</dt><dd>{selectedZone.temperature}</dd></div>
               <div><dt>湿度</dt><dd>{selectedZone.humidity}</dd></div>
