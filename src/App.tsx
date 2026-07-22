@@ -26,13 +26,13 @@ export default function App() {
       <main>
         {careMode ? (
           <Routes>
-            <Route path="/production" element={<ProductionPage careMode />} />
+            <Route path="/production" element={<ProductionPage careMode onCareModeChange={setCareMode} />} />
             <Route path="*" element={<Navigate to="/production" replace />} />
           </Routes>
         ) : (
           <Routes>
             <Route path="/" element={<Navigate to="/production" replace />} />
-            <Route path="/production" element={<ProductionPage />} />
+            <Route path="/production" element={<ProductionPage onCareModeChange={setCareMode} />} />
             <Route path="/market" element={<MarketPage />} />
             <Route path="/matching" element={<MatchingPage />} />
             <Route path="*" element={<Navigate to="/production" replace />} />

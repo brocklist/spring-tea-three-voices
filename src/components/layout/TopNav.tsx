@@ -20,6 +20,53 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
 
   const visibleNavItems = careMode ? navItems.slice(0, 1) : navItems;
 
+  if (isProductionDashboard) {
+    return (
+      <header className="dashboard-site-header">
+        <div className="dashboard-site-header__inner">
+          <NavLink to="/production" className="dashboard-site-header__brand" aria-label="一页问茶 · 春声三鸣">
+            <span><Sprout className="h-5 w-5" /></span>
+            <strong>一页问茶</strong>
+            <small>春声三鸣</small>
+          </NavLink>
+
+          <div className="dashboard-site-header__title">
+            <h1>数智茶鸣 <i /> 智慧生产</h1>
+            <p>面向茶农的天气、环境监测、病虫害识别与智能农事建议平台</p>
+          </div>
+
+          <nav className="dashboard-site-header__nav" aria-label="主导航">
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to} className={({ isActive }) => `dashboard-site-header__link ${isActive ? 'is-active' : ''}`}>
+                <span>{item.label}</span><small>{item.subtitle}</small>
+              </NavLink>
+            ))}
+          </nav>
+
+          <button
+            type="button"
+            className="dashboard-site-header__menu"
+            onClick={() => setIsOpen((value) => !value)}
+            aria-expanded={isOpen}
+            aria-label="切换导航"
+          >
+            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+
+        {isOpen ? (
+          <nav className="dashboard-site-header__mobile-nav" aria-label="移动端主导航">
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to} onClick={() => setIsOpen(false)}>
+                {item.label} <small>{item.subtitle}</small>
+              </NavLink>
+            ))}
+          </nav>
+        ) : null}
+      </header>
+    );
+  }
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     [
       'rounded-full px-4 py-2 text-sm font-semibold transition',

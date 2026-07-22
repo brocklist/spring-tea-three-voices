@@ -3,10 +3,15 @@ import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import { leafDetectionDemos, mockDetectionResult } from '../../data/mockData';
 import type { PestDetectionResult } from '../../types/domain';
 
-export function PestDetectionPanel() {
-  const [previewUrl, setPreviewUrl] = useState<string>();
-  const [fileName, setFileName] = useState<string>();
-  const [result, setResult] = useState<PestDetectionResult>();
+interface PestDetectionPanelProps {
+  variant?: 'default' | 'dashboard';
+}
+
+export function PestDetectionPanel({ variant = 'default' }: PestDetectionPanelProps) {
+  const initialDemo = variant === 'dashboard' ? leafDetectionDemos[0] : undefined;
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>(initialDemo?.imageUrl);
+  const [fileName, setFileName] = useState<string | undefined>(initialDemo?.pestType);
+  const [result, setResult] = useState<PestDetectionResult | undefined>(initialDemo);
   const [showDemos, setShowDemos] = useState(false);
 
   const confidenceWidth = useMemo(() => `${result?.confidence ?? 0}%`, [result]);
@@ -39,6 +44,45 @@ export function PestDetectionPanel() {
     setFileName(demo.pestType);
     setResult(demo);
     setShowDemos(false);
+  }
+
+  if (variant === 'dashboard') {
+    return (
+      <div className="command-pest">
+        <div className="command-pest__top">
+          <label className="command-pest__upload">
+            {previewUrl ? (
+              <img src={previewUrl} alt="待识别茶叶样本" />
+            ) : (
+              <><UploadCloud className="h-7 w-7" /><span>上传叶片图片</span></>
+            )}
+            <input className="sr-only" type="file" accept="image/png,image/jpeg,image/jpg" onChange={handleFileChange} />
+          </label>
+          <div className="command-pest__demos">
+            <p>常见样本</p>
+            <div>
+              {leafDetectionDemos.map((demo) => (
+                <button key={demo.pestType} type="button" onClick={() => chooseDemo(demo)} aria-label={`使用${demo.pestType}演示样本`}>
+                  <img src={demo.imageUrl} alt="" />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="command-pest__controls">
+          <span><FileImage className="h-3.5 w-3.5" /> {fileName ?? '支持 PNG / JPG 图片'}</span>
+          <button type="button" onClick={handleDetection} disabled={!previewUrl}><ScanSearch className="h-3.5 w-3.5" /> 开始识别</button>
+        </div>
+        <article className="command-pest__result">
+          <img src={result?.imageUrl ?? previewUrl ?? leafDetectionDemos[0].imageUrl} alt="叶片识别结果" />
+          <div>
+            <div className="command-pest__result-title"><h3>{result?.pestType ?? '等待上传样本'}</h3><span>{result?.confidence ?? '--'}%</span></div>
+            <p>{result?.summary ?? '上传样本后，将在这里展示叶片健康判断、风险类型和简要依据。'}</p>
+            <small><AlertHint severity={result?.severity} /> {result?.suggestion ?? '识别完成后，将给出巡园复核和处理建议。'}</small>
+          </div>
+        </article>
+      </div>
+    );
   }
 
   return (
@@ -166,4 +210,8 @@ export function PestDetectionPanel() {
       </div>
     </div>
   );
+}
+
+function AlertHint({ severity }: { severity?: string }) {
+  return <span>{severity ?? '演示结果'}</span>;
 }

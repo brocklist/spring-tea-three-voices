@@ -1,23 +1,66 @@
-import { Activity, BrainCircuit, CloudSun, DatabaseZap, LayoutPanelTop, Leaf, MapPinned, Radar, RotateCcw, ScanSearch, ShieldCheck, Sprout, Waves } from 'lucide-react';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FloatingDashboardWindow, type DashboardPanelId, type DashboardWindowPosition } from '../components/production/FloatingDashboardWindow';
-import { KnowledgeHubPanel } from '../components/production/KnowledgeHubPanel';
-import { MetricCard } from '../components/production/MetricCard';
+import {
+  Activity,
+  AlertTriangle,
+  BookOpenCheck,
+  ChevronRight,
+  CloudSun,
+  Droplets,
+  HeartHandshake,
+  Leaf,
+  MapPin,
+  Radar,
+  RotateCcw,
+  ShieldCheck,
+  Sprout,
+  ThermometerSun,
+  Waves,
+  Wind,
+  type LucideIcon,
+} from 'lucide-react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
-import { heroAssets, knowledgeArticles, sensorMetrics, teaGardenZones, weatherMetrics } from '../data/mockData';
-import { defaultWeatherLocation, fetchWeatherDashboard, formatLocationName, type WeatherForecastPoint, type WeatherLocation } from '../lib/weather';
-import type { TeaGardenZone, WeatherMetric } from '../types/domain';
+import {
+  externalKnowledgeSources,
+  heroAssets,
+  knowledgeArticles,
+  leafDetectionDemos,
+  sensorMetrics,
+  teaGardenZones,
+  weatherMetrics,
+} from '../data/mockData';
+import {
+  defaultWeatherLocation,
+  fetchWeatherDashboard,
+  formatLocationName,
+  type WeatherLocation,
+} from '../lib/weather';
+import type { WeatherMetric } from '../types/domain';
 
 const ThreeTeaGardenScene = lazy(() =>
   import('../components/production/ThreeTeaGardenScene').then(({ ThreeTeaGardenScene: Scene }) => ({ default: Scene })),
 );
 
-const operationHighlights = [
-  { label: '今日作业窗口', value: '06:30 - 10:30', note: '适宜采摘与巡园', icon: CloudSun },
-  { label: '重点巡护片区', value: '东坡 3 号', note: '叶面湿度偏高', icon: Radar },
-  { label: '综合生长态势', value: '良好', note: '春梢长势稳定', icon: Activity },
+const operationAdvice = [
+  {
+    title: '今天适合做什么',
+    detail: '上午适合轻采春梢、巡园和记录新梢长势；午后湿度升高时优先通风排湿。',
+    icon: Sprout,
+    tone: 'mint',
+  },
+  {
+    title: '今天重点检查哪里',
+    detail: '重点观察叶片背面、茶垄低洼处与东坡片区的叶面湿度变化。',
+    icon: Radar,
+    tone: 'gold',
+  },
+  {
+    title: '需要灌溉或施肥吗',
+    detail: '土壤水分处于适宜范围，暂不建议大量补水；春梢期可少量补充有机肥。',
+    icon: Droplets,
+    tone: 'cyan',
+  },
 ];
 
 const elderPlantingTips = [
@@ -26,50 +69,18 @@ const elderPlantingTips = [
   { title: '浇水与施肥', body: '土壤湿度处在适宜范围，今天不建议大量补水。春梢生长期可少量多次补充有机肥。' },
 ];
 
-interface DashboardWindowState {
-  open: boolean;
-  minimized: boolean;
-  position: DashboardWindowPosition;
-}
-
-type DashboardWindowStates = Record<DashboardPanelId, DashboardWindowState>;
-const dashboardPanels: DashboardPanelId[] = ['overview', 'weather', 'sensors', 'zone', 'leaf', 'knowledge'];
-
-function getWindowWidth(panel: DashboardPanelId, viewportWidth: number) {
-  const compact = viewportWidth <= 1023;
-  const preferredWidth = panel === 'zone' || panel === 'leaf' || panel === 'knowledge' ? (compact ? 400 : 560) : (compact ? 336 : 352);
-  return Math.min(preferredWidth, viewportWidth - 24);
-}
-
-function createWindowStates(): DashboardWindowStates {
-  const viewportWidth = typeof window === 'undefined' ? 1440 : window.innerWidth;
-  const compact = viewportWidth <= 1023;
-  const right = (panel: DashboardPanelId) => Math.max(12, viewportWidth - getWindowWidth(panel, viewportWidth) - 16);
-
-  return {
-    overview: { open: true, minimized: false, position: { x: 16, y: compact ? 76 : 88 } },
-    weather: { open: !compact, minimized: false, position: { x: right('weather'), y: compact ? 108 : 88 } },
-    sensors: { open: false, minimized: false, position: { x: compact ? 16 : 38, y: compact ? 146 : 162 } },
-    zone: { open: false, minimized: false, position: { x: compact ? 16 : 72, y: compact ? 180 : 138 } },
-    leaf: { open: false, minimized: false, position: { x: right('leaf'), y: compact ? 212 : 132 } },
-    knowledge: { open: false, minimized: false, position: { x: right('knowledge'), y: compact ? 244 : 164 } },
-  };
-}
-
 interface ProductionPageProps {
   careMode?: boolean;
+  onCareModeChange?: (enabled: boolean) => void;
 }
 
-export function ProductionPage({ careMode = false }: ProductionPageProps) {
+export function ProductionPage({ careMode = false, onCareModeChange }: ProductionPageProps) {
   const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
-  const [weatherForecast, setWeatherForecast] = useState<WeatherForecastPoint[]>([]);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string>();
   const [selectedZoneId, setSelectedZoneId] = useState(teaGardenZones[0].id);
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
-  const [windowStates, setWindowStates] = useState<DashboardWindowStates>(createWindowStates);
-  const [windowOrder, setWindowOrder] = useState<DashboardPanelId[]>(dashboardPanels);
   const [sceneResetToken, setSceneResetToken] = useState(0);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
 
@@ -84,13 +95,12 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
         const dashboard = await fetchWeatherDashboard(weatherLocation);
         if (!ignore) {
           setLiveWeatherMetrics(dashboard.metrics);
-          setWeatherForecast(dashboard.forecast);
           lastSuccessfulWeatherLocation.current = weatherLocation;
         }
       } catch {
         if (!ignore) {
           const fallbackLocation = lastSuccessfulWeatherLocation.current;
-          setWeatherError(`实时天气暂时不可用，已恢复至${formatLocationName(fallbackLocation)}的最近一次数据`);
+          setWeatherError(`实时天气暂时不可用，已恢复至${formatLocationName(fallbackLocation)}的最近一次数据。`);
           setWeatherLocation((currentLocation) => currentLocation.id === weatherLocation.id ? fallbackLocation : currentLocation);
         }
       } finally {
@@ -121,295 +131,225 @@ export function ProductionPage({ careMode = false }: ProductionPageProps) {
   }
 
   const selectedZone = teaGardenZones.find((zone) => zone.id === selectedZoneId) ?? teaGardenZones[0];
-  const openPanels = useMemo(() => Object.fromEntries(
-    Object.entries(windowStates).map(([panel, state]) => [panel, state.open]),
-  ) as Record<DashboardPanelId, boolean>, [windowStates]);
-  const bringToFront = useCallback((panel: DashboardPanelId) => {
-    setWindowOrder((current) => [...current.filter((item) => item !== panel), panel]);
-  }, []);
-  const windowProps = (panel: DashboardPanelId) => ({
-    isOpen: windowStates[panel].open,
-    minimized: windowStates[panel].minimized,
-    position: windowStates[panel].position,
-    zIndex: 12 + windowOrder.indexOf(panel),
-    onClose: () => closePanel(panel),
-    onMinimize: () => minimizePanel(panel),
-    onFocus: () => focusWindow(panel),
-    onPositionChange: (position: DashboardWindowPosition) => updateWindowPosition(panel, position),
-  });
-
-  function closePanel(panel: DashboardPanelId) {
-    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], open: false } }));
-  }
-
-  function minimizePanel(panel: DashboardPanelId) {
-    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], minimized: !current[panel].minimized } }));
-  }
-
-  function openPanel(panel: DashboardPanelId) {
-    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], open: true, minimized: false } }));
-    bringToFront(panel);
-  }
+  const weather = liveWeatherMetrics.find((metric) => metric.id === 'weather') ?? liveWeatherMetrics[0];
+  const environmentMetrics = liveWeatherMetrics.filter((metric) => metric.id !== 'weather');
 
   function selectZone(zoneId: string) {
     setSelectedZoneId(zoneId);
     setFocusedZoneId(zoneId);
-    setWindowStates((current) => ({ ...current, zone: { ...current.zone, open: true, minimized: false } }));
-    bringToFront('zone');
-  }
-
-  function focusWindow(panel: DashboardPanelId) {
-    bringToFront(panel);
-  }
-
-  function updateWindowPosition(panel: DashboardPanelId, position: DashboardWindowPosition) {
-    setWindowStates((current) => ({ ...current, [panel]: { ...current[panel], position } }));
-  }
-
-  function resetWindowLayout() {
-    setWindowStates(createWindowStates());
-    setWindowOrder(dashboardPanels);
   }
 
   function resetScene() {
     setSelectedZoneId(teaGardenZones[0].id);
     setFocusedZoneId(undefined);
     setSceneResetToken((token) => token + 1);
-    setWindowStates((current) => ({ ...current, overview: { ...current.overview, open: true, minimized: false } }));
   }
 
   return (
-    <main className="production-dashboard production-twin">
-      <div className="twin-canvas-shell">
-        <Suspense fallback={<MapLoadingFallback />}>
-          <ThreeTeaGardenScene zones={teaGardenZones} selectedZoneId={selectedZoneId} focusedZoneId={focusedZoneId} resetToken={sceneResetToken} onZoneSelect={selectZone} />
-        </Suspense>
-      </div>
-      <div className="twin-map-vignette" />
-      <div className="twin-map-atmosphere" />
-      <div className="twin-map-scan" />
-
-      <header className="twin-topbar">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="twin-topbar__mark"><Sprout className="h-4 w-4" /></span>
-          <div className="min-w-0">
-            <p className="twin-topbar__eyebrow">Chunjian digital twin</p>
-            <h1 className="truncate text-lg font-black text-white sm:text-xl">春建乡智慧茶园数字孪生</h1>
-          </div>
-        </div>
-        <div className="twin-topbar__meta">
-          <span className="twin-live-status"><span />监测在线</span>
-          <TwinClock />
-          <button type="button" onClick={resetWindowLayout} className="twin-reset" title="Restore window layout" aria-label="Restore window layout">
-            <LayoutPanelTop className="h-4 w-4" />
-          </button>
-          <button type="button" onClick={resetScene} className="twin-reset" title="回到默认视角" aria-label="回到默认视角">
-            <RotateCcw className="h-4 w-4" />
-          </button>
-        </div>
-      </header>
-
-      <FloatingDashboardWindow
-        id="overview"
-        title="今日茶园态势"
-        eyebrow="Production overview"
-        icon={Activity}
-        {...windowProps('overview')}
-      >
-        <p className="text-sm font-semibold leading-6 text-emerald-50/66">天气、土壤与叶面风险共同形成今日生产建议。</p>
-        <div className="mt-4 grid gap-2">
-          {operationHighlights.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.label} className="twin-stat-row">
-                <Icon className="h-4 w-4 text-emerald-300" />
-                <div className="min-w-0 flex-1">
-                  <p>{item.label}</p>
-                  <strong>{item.value}</strong>
-                </div>
-                <span>{item.note}</span>
+    <main className="production-dashboard production-command">
+      <div className="command-grid">
+        <aside className="command-column command-column--left">
+          <DashboardPanel number="01" title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun}>
+            <WeatherLocationSelector compact location={weatherLocation} loading={weatherLoading} error={weatherError} onChange={setWeatherLocation} />
+            <div className="command-weather-summary">
+              <div className="command-weather-summary__condition">
+                <CloudSun className="h-10 w-10" />
+                <strong>{weather?.value ?? '多云'}</strong>
               </div>
-            );
-          })}
-        </div>
-        <div className="twin-window__footnote"><MapPinned className="h-4 w-4" />点击地图监测点查看对应片区</div>
-      </FloatingDashboardWindow>
-
-      <FloatingDashboardWindow
-        id="zone"
-        title={selectedZone.name}
-        eyebrow="Selected tea garden zone"
-        icon={MapPinned}
-        {...windowProps('zone')}
-      >
-        <ZoneDetail zone={selectedZone} />
-      </FloatingDashboardWindow>
-
-      <FloatingDashboardWindow
-        id="sensors"
-        title="茶园传感器"
-        eyebrow="Live sensor network"
-        icon={Waves}
-        {...windowProps('sensors')}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          {sensorMetrics.map((metric) => <SensorGauge key={metric.id} metric={metric} />)}
-        </div>
-      </FloatingDashboardWindow>
-
-      <FloatingDashboardWindow
-        id="weather"
-        title="实时天气"
-        eyebrow="Open-Meteo live data"
-        icon={CloudSun}
-        {...windowProps('weather')}
-      >
-        <WeatherLocationSelector compact location={weatherLocation} loading={weatherLoading} error={weatherError} onChange={setWeatherLocation} />
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {liveWeatherMetrics.map((metric, index) => (
-            <div key={metric.id} className={index === liveWeatherMetrics.length - 1 ? 'col-span-2' : ''}>
-              <MetricCard metric={metric} />
+              <div className="command-weather-summary__metrics">
+                {environmentMetrics.map((metric) => <WeatherMetricRow key={metric.id} metric={metric} />)}
+              </div>
             </div>
-          ))}
-        </div>
-        <WeatherTrend forecast={weatherForecast} />
-      </FloatingDashboardWindow>
+            <div className="command-reminders" aria-label="生产提醒">
+              <span>生产提醒</span>
+              <p>适宜采摘与巡园</p>
+              <p>低洼地块注意排湿</p>
+              <p>风力较小，适合户外作业</p>
+            </div>
+          </DashboardPanel>
 
-      <FloatingDashboardWindow
-        id="leaf"
-        title="叶片健康识别"
-        eyebrow="Leaf health intelligence"
-        icon={ScanSearch}
-        {...windowProps('leaf')}
-      >
-        <PestDetectionPanel />
-      </FloatingDashboardWindow>
+          <DashboardPanel number="02" title="今日茶园生产态势" icon={Activity}>
+            <div className="command-status-grid">
+              <StatusTile label="今日作业窗口" value="适宜采摘" icon={Leaf} />
+              <StatusTile label="重点巡护片区" value="东坡低洼区" icon={MapPin} tone="cyan" />
+              <StatusTile label="综合生长态势" value="总体良好" icon={Sprout} tone="gold" />
+            </div>
+          </DashboardPanel>
 
-      <FloatingDashboardWindow
-        id="knowledge"
-        title="农业知识辅助"
-        eyebrow="Agronomy knowledge hub"
-        icon={BrainCircuit}
-        {...windowProps('knowledge')}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          {knowledgeArticles.map((article, index) => (
-            <article key={article.id} className="dashboard-article rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-300/10 text-emerald-200">
-                  {index === 0 ? <Leaf className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
-                </span>
-                <p className="text-sm font-bold text-emerald-200">{article.category}</p>
+          <DashboardPanel number="03" title="老年关怀模式" icon={HeartHandshake}>
+            <button type="button" className="command-care-toggle" onClick={() => onCareModeChange?.(true)}>
+              <span className="command-care-toggle__icon"><HeartHandshake className="h-5 w-5" /></span>
+              <span><strong>一键开启</strong><small>放大字体、简化信息、保留关键提醒</small></span>
+              <span className="command-care-toggle__switch" aria-hidden="true"><i /></span>
+            </button>
+          </DashboardPanel>
+        </aside>
+
+        <section className="command-map-panel" aria-label="春建乡茶园数字孪生地图">
+          <div className="command-map-panel__heading">
+            <span className="command-map-panel__eyebrow"><Waves className="h-4 w-4" /> Digital twin map</span>
+            <button type="button" onClick={resetScene} className="command-map-panel__reset"><RotateCcw className="h-4 w-4" /> 重置地图</button>
+          </div>
+          <div className="command-map-panel__scene">
+            <Suspense fallback={<MapLoadingFallback />}>
+              <ThreeTeaGardenScene
+                zones={teaGardenZones}
+                selectedZoneId={selectedZoneId}
+                focusedZoneId={focusedZoneId}
+                resetToken={sceneResetToken}
+                onZoneSelect={selectZone}
+              />
+            </Suspense>
+          </div>
+          <div className="command-map-panel__veil" />
+          <article className="command-zone-readout">
+            <div>
+              <span className="command-zone-readout__label"><Leaf className="h-4 w-4" /> 当前选中茶园</span>
+              <h2>{selectedZone.name}</h2>
+            </div>
+            <span className="command-zone-readout__status">{selectedZone.status}</span>
+            <dl>
+              <div><dt>温度</dt><dd>{selectedZone.temperature}</dd></div>
+              <div><dt>湿度</dt><dd>{selectedZone.humidity}</dd></div>
+              <div><dt>土壤湿度</dt><dd>{selectedZone.soilMoisture}</dd></div>
+            </dl>
+            <p>{selectedZone.action}</p>
+          </article>
+          <div className="command-map-panel__footer">
+            <span><i /> 实时点位在线</span>
+            <span>拖动旋转地图，点击发光点位查看片区状态</span>
+          </div>
+        </section>
+
+        <aside className="command-column command-column--right">
+          <DashboardPanel number="04" title="茶园环境监测驾驶舱" icon={Waves}>
+            <div className="command-gauge-grid">
+              {sensorMetrics.map((metric) => <SensorGauge key={metric.id} metric={metric} variant="dashboard" />)}
+            </div>
+          </DashboardPanel>
+
+          <DashboardPanel number="05" title="智能农事建议" icon={Sprout}>
+            <div className="command-advice-list">
+              {operationAdvice.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <article key={item.title} className={`command-advice command-advice--${item.tone}`}>
+                    <span><Icon className="h-4 w-4" /></span>
+                    <div><h3>{item.title}</h3><p>{item.detail}</p></div>
+                    <ChevronRight className="h-4 w-4" />
+                  </article>
+                );
+              })}
+            </div>
+          </DashboardPanel>
+
+          <DashboardPanel number="06" title="茶叶病虫害图片识别" icon={AlertTriangle}>
+            <PestDetectionPanel variant="dashboard" />
+          </DashboardPanel>
+        </aside>
+
+        <section className="command-bottom command-bottom--knowledge">
+          <DashboardPanel number="07" title="农业知识辅助" icon={BookOpenCheck}>
+            <div className="command-knowledge-layout">
+              <div className="command-article-strip">
+                {knowledgeArticles.map((article) => (
+                  <article key={article.id} className="command-article-card">
+                    <span>{article.category}</span>
+                    <h3>{article.title}</h3>
+                    <p>{article.summary}</p>
+                    <button type="button">查看详情 <ChevronRight className="h-3.5 w-3.5" /></button>
+                  </article>
+                ))}
               </div>
-              <h3 className="mt-4 text-lg font-black text-white">{article.title}</h3>
-              <p className="mt-2 text-sm leading-6 text-emerald-50/68">{article.summary}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {article.tags.map((tag) => <span key={tag} className="twin-tag">{tag}</span>)}
-              </div>
-            </article>
-          ))}
-        </div>
-        <KnowledgeHubPanel />
-      </FloatingDashboardWindow>
+              <nav className="command-source-list" aria-label="官方资源导航">
+                <p>官方资源导航</p>
+                {externalKnowledgeSources.map((source) => (
+                  <a key={source.id} href={source.url} target="_blank" rel="noreferrer"><span>{source.organization}</span><ChevronRight className="h-3.5 w-3.5" /></a>
+                ))}
+              </nav>
+            </div>
+          </DashboardPanel>
+        </section>
 
-      <nav className="twin-toolbar" aria-label="数字孪生工具栏">
-        <ToolbarButton icon={Activity} label="今日态势" active={openPanels.overview} onClick={() => openPanel('overview')} />
-        <ToolbarButton icon={CloudSun} label="实时天气" active={openPanels.weather} onClick={() => openPanel('weather')} />
-        <ToolbarButton icon={Waves} label="传感器" active={openPanels.sensors} onClick={() => openPanel('sensors')} />
-        <ToolbarButton icon={ScanSearch} label="叶片识别" active={openPanels.leaf} onClick={() => openPanel('leaf')} />
-        <ToolbarButton icon={BrainCircuit} label="农业知识" active={openPanels.knowledge} onClick={() => openPanel('knowledge')} />
-        <span className="twin-toolbar__divider" />
-        <span className="twin-toolbar__hint"><DatabaseZap className="h-3.5 w-3.5" />数据实时联动</span>
-      </nav>
+        <section className="command-bottom command-bottom--overview">
+          <DashboardPanel number="08" title="平台总览" subtitle="演示数据" icon={ShieldCheck}>
+            <div className="command-audience-list">
+              <span>茶农</span><i>›</i><span>茶企</span><i>›</i><span>消费者</span><i>›</i><span>高校学生团队</span>
+            </div>
+            <div className="command-platform-stats">
+              <PlatformStat label="接入茶园" value={String(teaGardenZones.length)} />
+              <PlatformStat label="资料来源" value={String(externalKnowledgeSources.length)} />
+              <PlatformStat label="识别样本" value={String(leafDetectionDemos.length)} />
+              <PlatformStat label="核心模块" value="3" />
+            </div>
+          </DashboardPanel>
+        </section>
+      </div>
     </main>
   );
 }
 
-function ToolbarButton({ icon: Icon, label, active, onClick }: { icon: typeof Activity; label: string; active: boolean; onClick: () => void }) {
+function DashboardPanel({
+  number,
+  title,
+  subtitle,
+  icon: Icon,
+  children,
+}: {
+  number: string;
+  title: string;
+  subtitle?: string;
+  icon: LucideIcon;
+  children: ReactNode;
+}) {
   return (
-    <button type="button" onClick={onClick} className={`twin-toolbar__button ${active ? 'is-active' : ''}`} aria-pressed={active} title={label}>
-      <Icon className="h-4 w-4" />
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function TwinClock() {
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return (
-    <>
-      <span className="hidden md:inline">{now.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', weekday: 'short' })}</span>
-      <time>{now.toLocaleTimeString('zh-CN', { hour12: false })}</time>
-    </>
-  );
-}
-
-function WeatherTrend({ forecast }: { forecast: WeatherForecastPoint[] }) {
-  if (forecast.length === 0) {
-    return null;
-  }
-
-  return (
-    <section className="twin-weather-trend" aria-label="Next six hours weather trend">
-      <div className="twin-weather-trend__header">
-        <span>Next 6h</span>
-        <span>rain probability / wind</span>
-      </div>
-      <div className="twin-weather-trend__grid">
-        {forecast.map((point) => (
-          <div key={point.time} className="twin-weather-trend__item">
-            <time>{point.time}</time>
-            <strong>{Math.round(point.temperature)}°</strong>
-            <span>{point.rainProbability}% rain</span>
-            <i style={{ height: `${Math.max(18, Math.min(100, point.rainProbability + point.wind * 1.8))}%` }} />
-          </div>
-        ))}
-      </div>
+    <section className="command-panel">
+      <header className="command-panel__header">
+        <span className="command-panel__number">{number}</span>
+        <Icon className="h-4 w-4" />
+        <div><h2>{title}</h2>{subtitle ? <p>{subtitle}</p> : null}</div>
+      </header>
+      <div className="command-panel__body">{children}</div>
     </section>
   );
 }
 
-function ZoneDetail({ zone }: { zone: TeaGardenZone }) {
+function WeatherMetricRow({ metric }: { metric: WeatherMetric }) {
+  const iconMap: Record<string, LucideIcon> = {
+    temperature: ThermometerSun,
+    humidity: Droplets,
+    rain: CloudSun,
+    wind: Wind,
+  };
+  const Icon = iconMap[metric.id] ?? Activity;
+
   return (
-    <div>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-2xl font-black text-white">{zone.name}</h3>
-          <p className="mt-2 text-sm font-semibold text-emerald-50/62">{zone.action}</p>
-        </div>
-        <span className="rounded-full border border-emerald-200/18 bg-emerald-300/8 px-3 py-1 text-xs font-black text-emerald-100">{zone.status}</span>
-      </div>
-      <p className="mt-4 rounded-xl border border-amber-200/15 bg-amber-100/5 px-3 py-2 text-sm font-bold text-amber-100/92">{zone.risk}</p>
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <ZoneMetric label="管理面积" value={zone.area} />
-        <ZoneMetric label="环境温度" value={zone.temperature} />
-        <ZoneMetric label="空气湿度" value={zone.humidity} />
-        <ZoneMetric label="土壤湿度" value={zone.soilMoisture} />
-      </div>
+    <div className="command-weather-row">
+      <span><Icon className="h-3.5 w-3.5" /> {metric.label}</span>
+      <strong>{metric.value}{metric.unit}</strong>
     </div>
   );
 }
 
-function ZoneMetric({ label, value }: { label: string; value: string }) {
+function StatusTile({ label, value, icon: Icon, tone = 'mint' }: { label: string; value: string; icon: LucideIcon; tone?: 'mint' | 'cyan' | 'gold' }) {
   return (
-    <div className="twin-zone-metric">
-      <p>{label}</p>
+    <article className={`command-status-tile command-status-tile--${tone}`}>
+      <Icon className="h-6 w-6" />
+      <span>{label}</span>
       <strong>{value}</strong>
-    </div>
+    </article>
   );
+}
+
+function PlatformStat({ label, value }: { label: string; value: string }) {
+  return <div><dt>{label}</dt><dd>{value}</dd></div>;
 }
 
 function MapLoadingFallback() {
   return (
-    <div className="twin-map-loading">
-      <img src="/assets/production/chunjian-digital-twin-map-v1.png" alt="春建乡茶园地图加载中" />
-      <span>正在构建茶园数字孪生模型</span>
+    <div className="command-map-loading">
+      <img src="/assets/production/chunjian-digital-twin-map-v1.png" alt="春建乡茶园数字孪生地图加载中" />
+      <span>正在构建茶园数字孪生地图</span>
     </div>
   );
 }
@@ -478,7 +418,7 @@ function ElderCareProductionPage({
 
           <article className="tech-panel rounded-[2rem] p-7">
             <h2 className="text-4xl font-black text-white">茶园环境</h2>
-            <p className="mt-4 text-2xl font-semibold leading-relaxed text-white/76">下面几个数字用于判断茶树是否舒服。保持土壤微酸、湿度适中、光照不过强，春梢长势会更稳定。</p>
+            <p className="mt-4 text-2xl font-semibold leading-relaxed text-white/76">下面几个数字用于判断茶树是否舒适。保持土壤微酸、湿度适中、光照不过强，春梢长势会更稳定。</p>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {sensorMetrics.slice(0, 4).map((metric) => (
                 <div key={metric.id} className="rounded-3xl border border-white/12 bg-white/10 p-5 text-white">
