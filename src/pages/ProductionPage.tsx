@@ -201,6 +201,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </Suspense>
           </div>
           <div className="command-map-panel__veil" />
+          <div className="command-map-panel__clouds" aria-hidden="true"><i /><i /><i /></div>
           <div className="command-map-panel__footer">
             <span><i /> 实时点位在线</span>
             <span>拖动旋转地图，点击数据卡片查看片区状态</span>
