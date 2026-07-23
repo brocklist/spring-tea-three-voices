@@ -47,19 +47,19 @@ const operationAdvice = [
     title: '今天适合做什么',
     detail: '上午适合轻采春梢、巡园和记录新梢长势；午后湿度升高时优先通风排湿。',
     icon: Sprout,
-    tone: 'mint',
+    tone: 'gold',
   },
   {
     title: '今天重点检查哪里',
     detail: '重点观察叶片背面、茶垄低洼处与东坡片区的叶面湿度变化。',
     icon: Radar,
-    tone: 'gold',
+    tone: 'orange',
   },
   {
     title: '需要灌溉或施肥吗',
     detail: '土壤水分处于适宜范围，暂不建议大量补水；春梢期可少量补充有机肥。',
     icon: Droplets,
-    tone: 'cyan',
+    tone: 'ivory',
   },
 ];
 
@@ -148,7 +148,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
     <main className="production-dashboard production-command">
       <div className="command-grid">
         <aside className="command-column command-column--left">
-          <DashboardPanel number="01" title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun}>
+          <DashboardPanel number="01" title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun} priority="primary" tone="gold">
             <WeatherLocationSelector compact location={weatherLocation} loading={weatherLoading} error={weatherError} onChange={setWeatherLocation} />
             <div className="command-weather-summary">
               <div className="command-weather-summary__condition">
@@ -170,7 +170,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
           <DashboardPanel number="02" title="今日茶园生产态势" icon={Activity}>
             <div className="command-status-grid">
               <StatusTile label="今日作业窗口" value="适宜采摘" icon={Leaf} />
-              <StatusTile label="重点巡护片区" value="东坡低洼区" icon={MapPin} tone="cyan" />
+              <StatusTile label="重点巡护片区" value="东坡低洼区" icon={MapPin} tone="orange" />
               <StatusTile label="综合生长态势" value="总体良好" icon={Sprout} tone="gold" />
             </div>
           </DashboardPanel>
@@ -184,9 +184,9 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
           </DashboardPanel>
         </aside>
 
-        <section className="command-map-panel" aria-label="春建乡茶园数字孪生地图">
+        <section className="command-map-panel command-map-panel--primary" aria-label="春建乡茶园数字孪生地图">
           <div className="command-map-panel__heading">
-            <span className="command-map-panel__eyebrow"><Waves className="h-4 w-4" /> Digital twin map</span>
+            <span className="command-map-panel__eyebrow"><Waves className="h-4 w-4" /> 茶园数字孪生地图</span>
             <button type="button" onClick={resetScene} className="command-map-panel__reset"><RotateCcw className="h-4 w-4" /> 重置地图</button>
           </div>
           <div className="command-map-panel__scene">
@@ -208,13 +208,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         </section>
 
         <aside className="command-column command-column--right">
-          <DashboardPanel number="04" title="茶园环境监测驾驶舱" icon={Waves}>
+          <DashboardPanel number="04" title="茶园环境监测驾驶舱" icon={Waves} priority="primary" tone="ivory">
             <div className="command-gauge-grid">
               {sensorMetrics.map((metric) => <SensorGauge key={metric.id} metric={metric} variant="dashboard" />)}
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="05" title="智能农事建议" icon={Sprout}>
+          <DashboardPanel number="05" title="智能农事建议" icon={Sprout} priority="primary" tone="orange">
             <div className="command-advice-list">
               {operationAdvice.map((item) => {
                 const Icon = item.icon;
@@ -229,13 +229,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="06" title="茶叶病虫害图片识别" icon={AlertTriangle}>
+          <DashboardPanel number="06" title="茶叶病虫害图片识别" icon={AlertTriangle} tone="orange">
             <PestDetectionPanel variant="dashboard" />
           </DashboardPanel>
         </aside>
 
         <section className="command-bottom command-bottom--knowledge">
-          <DashboardPanel number="07" title="农业知识辅助" icon={BookOpenCheck}>
+          <DashboardPanel number="07" title="农业知识辅助" icon={BookOpenCheck} tone="ivory">
             <div className="command-knowledge-layout">
               <div className="command-article-strip">
                 {knowledgeArticles.map((article) => (
@@ -258,7 +258,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         </section>
 
         <section className="command-bottom command-bottom--overview">
-          <DashboardPanel number="08" title="平台总览" subtitle="演示数据" icon={ShieldCheck}>
+          <DashboardPanel number="08" title="平台总览" subtitle="演示数据" icon={ShieldCheck} tone="gold">
             <div className="command-audience-list">
               <span>茶农</span><i>›</i><span>茶企</span><i>›</i><span>消费者</span><i>›</i><span>高校学生团队</span>
             </div>
@@ -281,15 +281,19 @@ function DashboardPanel({
   subtitle,
   icon: Icon,
   children,
+  priority = 'standard',
+  tone = 'ivory',
 }: {
   number: string;
   title: string;
   subtitle?: string;
   icon: LucideIcon;
   children: ReactNode;
+  priority?: 'primary' | 'standard';
+  tone?: 'gold' | 'orange' | 'ivory' | 'mint';
 }) {
   return (
-    <section className="command-panel">
+    <section className={`command-panel command-panel--${priority} command-panel--${tone}`}>
       <header className="command-panel__header">
         <span className="command-panel__number">{number}</span>
         <Icon className="h-4 w-4" />
@@ -317,7 +321,7 @@ function WeatherMetricRow({ metric }: { metric: WeatherMetric }) {
   );
 }
 
-function StatusTile({ label, value, icon: Icon, tone = 'mint' }: { label: string; value: string; icon: LucideIcon; tone?: 'mint' | 'cyan' | 'gold' }) {
+function StatusTile({ label, value, icon: Icon, tone = 'mint' }: { label: string; value: string; icon: LucideIcon; tone?: 'mint' | 'orange' | 'gold' | 'ivory' }) {
   return (
     <article className={`command-status-tile command-status-tile--${tone}`}>
       <Icon className="h-6 w-6" />

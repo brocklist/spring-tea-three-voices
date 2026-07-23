@@ -24,14 +24,13 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
     return (
       <header className="dashboard-site-header">
         <div className="dashboard-site-header__inner">
-          <NavLink to="/production" className="dashboard-site-header__brand" aria-label="一页问茶 · 春声三鸣">
+          <NavLink to="/production" className="dashboard-site-header__brand" aria-label="一叶问茶·春声三鸣">
             <span><Sprout className="h-5 w-5" /></span>
-            <strong>一页问茶</strong>
-            <small>春声三鸣</small>
+            <strong>一叶问茶·春声三鸣</strong>
           </NavLink>
 
           <div className="dashboard-site-header__title">
-            <h1>数智茶鸣 <i /> 智慧生产</h1>
+            <h1>数智茶鸣｜智慧生产</h1>
             <p>面向茶农的天气、环境监测、病虫害识别与智能农事建议平台</p>
           </div>
 
@@ -69,7 +68,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     [
-      'rounded-full px-4 py-2 text-sm font-semibold transition',
+      'flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition xl:flex-row',
       isProductionDashboard
         ? isActive
           ? 'bg-tea-spring/22 text-white shadow-[0_0_24px_rgba(52,211,153,0.16)]'
@@ -93,10 +92,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
             <span className={['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-soft', isProductionDashboard ? 'bg-emerald-400/18 text-emerald-200' : 'bg-tea-ink'].join(' ')}>
               <Sprout className="h-5 w-5" />
             </span>
-            <span className="min-w-0">
-              <span className={['block truncate text-sm font-black tracking-[0.24em]', isProductionDashboard ? 'text-white' : 'text-tea-leaf'].join(' ')}>一页问茶</span>
-              <span className={['block text-xs font-semibold', isProductionDashboard ? 'text-white/50' : 'text-tea-ink/58'].join(' ')}>春声三鸣</span>
-            </span>
+            <span className={['min-w-0 whitespace-nowrap text-base font-black tracking-[0.08em] sm:text-lg', isProductionDashboard ? 'text-white' : 'text-tea-leaf'].join(' ')}>一叶问茶·春声三鸣</span>
           </NavLink>
 
           <button
@@ -118,11 +114,11 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
           </button>
         </div>
 
-        <nav className={['hidden items-center rounded-full border p-1 md:flex', isProductionDashboard ? 'border-white/10 bg-white/5' : 'border-white/70 bg-white/64 shadow-sm'].join(' ')}>
+        <nav className={['hidden items-center rounded-2xl border p-1 md:grid', careMode ? 'grid-cols-1' : 'w-[min(42rem,52vw)] grid-cols-3', isProductionDashboard ? 'border-white/10 bg-white/5' : 'border-white/70 bg-white/64 shadow-sm'].join(' ')}>
           {visibleNavItems.map((item) => (
             <NavLink key={item.to} to={item.to} className={linkClass}>
               <span>{item.label}</span>
-              <span className="ml-2 text-xs font-medium opacity-70">{item.subtitle}</span>
+              <span className="text-xs font-medium opacity-70">{item.subtitle}</span>
             </NavLink>
           ))}
         </nav>
