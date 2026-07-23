@@ -69,7 +69,9 @@ function MapFallback({ zones, selectedZoneId, onZoneSelect }: SceneFallbackProps
 
         return (
           <div key={zone.id} className="scene-zone-card-anchor--fallback" style={{ left: `${left}%`, top: `${top}%` }}>
-            <ZoneCard zone={zone} selected={selectedZoneId === zone.id} onSelect={() => onZoneSelect(zone.id)} />
+            {selectedZoneId === zone.id
+              ? <ZoneCard zone={zone} onSelect={() => onZoneSelect(zone.id)} />
+              : <ZoneMarkerLabel zone={zone} onSelect={() => onZoneSelect(zone.id)} />}
           </div>
         );
       })}
@@ -281,7 +283,7 @@ function TownshipBoundary() {
   );
 }
 
-function ZoneCard({ zone, selected, onSelect }: { zone: TeaGardenZone; selected: boolean; onSelect: () => void }) {
+function ZoneCard({ zone, onSelect }: { zone: TeaGardenZone; onSelect: () => void }) {
   return (
     <button
       type="button"
@@ -289,13 +291,13 @@ function ZoneCard({ zone, selected, onSelect }: { zone: TeaGardenZone; selected:
         event.stopPropagation();
         onSelect();
       }}
-      className={`scene-zone-card scene-zone-card--${zone.markerTone} ${selected ? 'is-selected' : ''}`}
-      aria-pressed={selected}
+      className={`scene-zone-card scene-zone-card--${zone.markerTone} is-selected`}
+      aria-pressed="true"
       aria-label={`${zone.name}，温度${zone.temperature}，空气湿度${zone.humidity}，土壤湿度${zone.soilMoisture}，状态${zone.status}`}
     >
       <span className="scene-zone-card__heading">
         <span className="scene-zone-card__name"><i aria-hidden="true" />{zone.name}</span>
-        <span className="scene-zone-card__mode">{selected ? '当前选中' : '实时在线'}</span>
+        <span className="scene-zone-card__mode">当前选中</span>
       </span>
       <span className="scene-zone-card__metrics">
         <span><small>温度</small><strong>{zone.temperature}</strong></span>
@@ -303,7 +305,25 @@ function ZoneCard({ zone, selected, onSelect }: { zone: TeaGardenZone; selected:
         <span><small>土壤湿度</small><strong>{zone.soilMoisture}</strong></span>
         <span><small>状态</small><strong>{zone.status}</strong></span>
       </span>
-      {selected ? <span className="scene-zone-card__action">{zone.action}</span> : null}
+      <span className="scene-zone-card__action">{zone.action}</span>
+    </button>
+  );
+}
+
+function ZoneMarkerLabel({ zone, onSelect }: { zone: TeaGardenZone; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect();
+      }}
+      className={`scene-zone-marker scene-zone-marker--${zone.markerTone}`}
+      aria-pressed="false"
+      aria-label={`选择${zone.name}，当前状态${zone.status}`}
+    >
+      <span className="scene-zone-marker__pulse" />
+      <span className="scene-zone-marker__label">{zone.name}</span>
     </button>
   );
 }
@@ -319,8 +339,8 @@ function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selecte
         <ringGeometry args={selected ? [0.28, 0.36, 40] : [0.22, 0.28, 40]} />
         <meshBasicMaterial color={color} transparent opacity={0.88} side={DoubleSide} />
       </mesh>
-      <Html position={cardPosition} distanceFactor={selected ? 9.2 : 11.6} zIndexRange={[8, 0]}>
-        <ZoneCard zone={zone} selected={selected} onSelect={onSelect} />
+      <Html position={selected ? cardPosition : [0, 0.28, 0]} center={!selected} distanceFactor={selected ? 10.4 : 11.6} zIndexRange={[8, 0]}>
+        {selected ? <ZoneCard zone={zone} onSelect={onSelect} /> : <ZoneMarkerLabel zone={zone} onSelect={onSelect} />}
       </Html>
     </group>
   );
