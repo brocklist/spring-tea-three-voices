@@ -1834,9 +1834,6 @@ select {
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 48% 31% at -6% 18%, rgba(202, 222, 201, 0.15), transparent 72%),
-    radial-gradient(ellipse 46% 28% at 106% 72%, rgba(190, 213, 192, 0.13), transparent 72%),
-    radial-gradient(ellipse 38% 22% at 48% 104%, rgba(208, 224, 199, 0.09), transparent 74%),
     radial-gradient(ellipse at 50% 47%, transparent 34%, rgba(3, 17, 12, 0.1) 75%, rgba(1, 11, 7, 0.38)),
     linear-gradient(180deg, rgba(2, 18, 11, 0.18), transparent 22%, transparent 78%, rgba(2, 13, 8, 0.28));
 }
@@ -1931,6 +1928,14 @@ select {
 @keyframes command-map-cloud-three {
   from { transform: translate3d(-4%, 4%, 0) scale(0.94); }
   to { transform: translate3d(7%, -8%, 0) scale(1.08); }
+}
+
+/* Cloud transitions belong to the terrain model, not the rectangular map shell. */
+.command-map-panel__veil::before,
+.command-map-panel__veil::after {
+  display: none;
+  content: none;
+  animation: none;
 }
 
 @keyframes command-map-mist-left {
