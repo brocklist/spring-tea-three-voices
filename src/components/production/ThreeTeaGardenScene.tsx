@@ -1,4 +1,4 @@
-import { Grid, Html, OrbitControls, useTexture } from '@react-three/drei';
+import { Grid, Html, Line, OrbitControls, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Color, DoubleSide, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
@@ -7,6 +7,10 @@ import type { CameraPose, TeaGardenZone } from '../../types/domain';
 
 const mapAsset = '/assets/production/chunjian-digital-twin-map-v1.png';
 const terrainSize = { width: 16, depth: 9 };
+const townshipBoundary: Array<[number, number]> = [
+  [-6.65, -2.75], [-4.85, -3.55], [-1.55, -3.8], [1.55, -3.62], [4.65, -2.85], [6.65, -1.1],
+  [6.35, 1.35], [4.95, 2.95], [2.05, 3.72], [-1.3, 3.58], [-4.5, 2.85], [-6.35, 1.2], [-6.8, -1.35], [-6.65, -2.75],
+];
 const overviewCameraPose: CameraPose = {
   position: [6.55, 5.85, 7.15],
   target: [0, 0.1, 0],
@@ -35,6 +39,10 @@ function getTerrainHeight(x: number, z: number) {
   return broadSlope + northernRidge + easternRidge + teaTerrace;
 }
 
+function getTownshipBoundaryPoints(offset = 0.12): Array<[number, number, number]> {
+  return townshipBoundary.map(([x, z]) => [x, getTerrainHeight(x, z) + offset, z]);
+}
+
 function supportsWebGL() {
   if (typeof document === 'undefined') {
     return false;
@@ -49,22 +57,20 @@ function MapFallback({ zones, selectedZoneId, onZoneSelect }: SceneFallbackProps
     <div className="twin-map-fallback">
       <img src={mapAsset} alt="春建乡茶园数字孪生地图" />
       <div className="twin-map-fallback__veil" />
+      <div className="twin-map-fallback__boundary" aria-hidden="true">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <polyline points="8,19 20,11 40,8 59,10 77,18 89,34 87,61 78,79 60,88 39,86 19,78 7,59 5,35 8,19" />
+        </svg>
+        <span>春建乡数字孪生范围</span>
+      </div>
       {zones.map((zone) => {
         const left = Math.min(88, Math.max(12, 50 + (zone.position[0] / terrainSize.width) * 90));
         const top = Math.min(86, Math.max(14, 50 + (zone.position[2] / terrainSize.depth) * 80));
 
         return (
-        <button
-          key={zone.id}
-          type="button"
-          onClick={() => onZoneSelect(zone.id)}
-          className={`scene-zone-marker scene-zone-marker--fallback scene-zone-marker--${zone.markerTone} ${selectedZoneId === zone.id ? 'is-selected' : ''}`}
-          style={{ left: `${left}%`, top: `${top}%` }}
-          aria-label={`查看${zone.name}片区详情`}
-        >
-          <span className="scene-zone-marker__pulse" />
-          <span className="scene-zone-marker__label">{zone.name}</span>
-        </button>
+          <div key={zone.id} className="scene-zone-card-anchor--fallback" style={{ left: `${left}%`, top: `${top}%` }}>
+            <ZoneCard zone={zone} selected={selectedZoneId === zone.id} onSelect={() => onZoneSelect(zone.id)} />
+          </div>
         );
       })}
     </div>
@@ -85,6 +91,7 @@ class SceneErrorBoundary extends Component<{ fallback: React.ReactNode; children
 
 function Terrain({ onReady }: { onReady: () => void }) {
   const texture = useTexture(mapAsset);
+  const { gl } = useThree();
   const geometry = useMemo(() => {
     const nextGeometry = new PlaneGeometry(terrainSize.width, terrainSize.depth, 72, 40);
     nextGeometry.rotateX(-Math.PI / 2);
@@ -101,9 +108,10 @@ function Terrain({ onReady }: { onReady: () => void }) {
 
   useLayoutEffect(() => {
     texture.colorSpace = SRGBColorSpace;
-    texture.anisotropy = 2;
+    texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    texture.needsUpdate = true;
     onReady();
-  }, [onReady, texture]);
+  }, [gl, onReady, texture]);
 
   useEffect(() => () => {
     geometry.dispose();
@@ -114,20 +122,28 @@ function Terrain({ onReady }: { onReady: () => void }) {
   return (
     <group>
       <mesh geometry={geometry}>
-        <meshStandardMaterial map={texture} roughness={0.96} metalness={0.03} side={DoubleSide} />
+        <meshStandardMaterial
+          map={texture}
+          emissiveMap={texture}
+          emissive="#c9ffe6"
+          emissiveIntensity={0.16}
+          roughness={0.92}
+          metalness={0.02}
+          side={DoubleSide}
+        />
       </mesh>
       <mesh geometry={geometry} position={[0, 0.012, 0]}>
-        <meshBasicMaterial color="#4df5cc" wireframe transparent opacity={0.13} depthWrite={false} />
+        <meshBasicMaterial color="#4df5cc" wireframe transparent opacity={0.045} depthWrite={false} />
       </mesh>
       <Grid
         args={[terrainSize.width, terrainSize.depth]}
         position={[0, 0.075, 0]}
         cellSize={0.72}
-        cellThickness={0.32}
-        cellColor="#48e5bd"
+        cellThickness={0.16}
+        cellColor="#1f9679"
         sectionSize={3.6}
-        sectionThickness={0.52}
-        sectionColor="#79f4d2"
+        sectionThickness={0.3}
+        sectionColor="#45cda8"
         fadeDistance={17}
         fadeStrength={1}
         infiniteGrid={false}
@@ -242,30 +258,69 @@ function ScanLines() {
   );
 }
 
+function TownshipBoundary() {
+  const outerPoints = useMemo(() => getTownshipBoundaryPoints(0.11), []);
+  const innerPoints = useMemo(() => getTownshipBoundaryPoints(0.14), []);
+  const labelPosition = useMemo<[number, number, number]>(() => {
+    const x = -5.7;
+    const z = -2.35;
+    return [x, getTerrainHeight(x, z) + 0.32, z];
+  }, []);
+
+  return (
+    <group>
+      <Line points={outerPoints} color="#46f3cf" lineWidth={3.4} transparent opacity={0.18} />
+      <Line points={innerPoints} color="#8dffe2" lineWidth={1.05} transparent opacity={0.9} />
+      <Html position={labelPosition} distanceFactor={12} zIndexRange={[2, 0]}>
+        <div className="scene-boundary-label" aria-label="春建乡数字孪生范围">
+          <span>数字孪生范围</span>
+          <strong>春建乡</strong>
+        </div>
+      </Html>
+    </group>
+  );
+}
+
+function ZoneCard({ zone, selected, onSelect }: { zone: TeaGardenZone; selected: boolean; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(event) => {
+        event.stopPropagation();
+        onSelect();
+      }}
+      className={`scene-zone-card scene-zone-card--${zone.markerTone} ${selected ? 'is-selected' : ''}`}
+      aria-pressed={selected}
+      aria-label={`${zone.name}，温度${zone.temperature}，空气湿度${zone.humidity}，土壤湿度${zone.soilMoisture}，状态${zone.status}`}
+    >
+      <span className="scene-zone-card__heading">
+        <span className="scene-zone-card__name"><i aria-hidden="true" />{zone.name}</span>
+        <span className="scene-zone-card__mode">{selected ? '当前选中' : '实时在线'}</span>
+      </span>
+      <span className="scene-zone-card__metrics">
+        <span><small>温度</small><strong>{zone.temperature}</strong></span>
+        <span><small>空气湿度</small><strong>{zone.humidity}</strong></span>
+        <span><small>土壤湿度</small><strong>{zone.soilMoisture}</strong></span>
+        <span><small>状态</small><strong>{zone.status}</strong></span>
+      </span>
+      {selected ? <span className="scene-zone-card__action">{zone.action}</span> : null}
+    </button>
+  );
+}
+
 function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selected: boolean; onSelect: () => void }) {
   const position: [number, number, number] = [zone.position[0], getTerrainHeight(zone.position[0], zone.position[2]) + 0.18, zone.position[2]];
   const color = zone.markerTone === 'gold' ? '#f5c764' : zone.markerTone === 'cyan' ? '#57e7eb' : '#71f5bd';
+  const cardPosition: [number, number, number] = [zone.cardOffset[0], selected ? 0.58 : 0.38, zone.cardOffset[1]];
 
   return (
     <group position={position}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.22, 0.28, 40]} />
+        <ringGeometry args={selected ? [0.28, 0.36, 40] : [0.22, 0.28, 40]} />
         <meshBasicMaterial color={color} transparent opacity={0.88} side={DoubleSide} />
       </mesh>
-      <Html position={[0, 0.22, 0]} center distanceFactor={10.5} zIndexRange={[3, 0]}>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onSelect();
-          }}
-          className={`scene-zone-marker scene-zone-marker--${zone.markerTone} ${selected ? 'is-selected' : ''}`}
-          aria-pressed={selected}
-          aria-label={`查看${zone.name}片区详情`}
-        >
-          <span className="scene-zone-marker__pulse" />
-          <span className="scene-zone-marker__label">{zone.name}</span>
-        </button>
+      <Html position={cardPosition} distanceFactor={selected ? 9.2 : 11.6} zIndexRange={[8, 0]}>
+        <ZoneCard zone={zone} selected={selected} onSelect={onSelect} />
       </Html>
     </group>
   );
@@ -286,6 +341,7 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
         <Terrain onReady={handleReady} />
       </Suspense>
       <ScanLines />
+      <TownshipBoundary />
       {zones.map((zone) => <ZoneMarker key={zone.id} zone={zone} selected={zone.id === selectedZoneId} onSelect={() => onZoneSelect(zone.id)} />)}
       <CameraController pose={focusedZone?.cameraPose ?? overviewCameraPose} resetToken={resetToken} />
     </>

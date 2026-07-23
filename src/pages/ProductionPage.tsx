@@ -130,7 +130,6 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
     );
   }
 
-  const selectedZone = teaGardenZones.find((zone) => zone.id === selectedZoneId) ?? teaGardenZones[0];
   const weather = liveWeatherMetrics.find((metric) => metric.id === 'weather') ?? liveWeatherMetrics[0];
   const environmentMetrics = liveWeatherMetrics.filter((metric) => metric.id !== 'weather');
 
@@ -202,24 +201,9 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </Suspense>
           </div>
           <div className="command-map-panel__veil" />
-          <article className="command-zone-readout">
-            <div className="command-zone-readout__heading">
-              <div className="command-zone-readout__identity">
-                <span className="command-zone-readout__label"><Leaf className="h-4 w-4" /> 当前选中茶园</span>
-                <h2>{selectedZone.name}</h2>
-              </div>
-              <span className="command-zone-readout__status">{selectedZone.status}</span>
-            </div>
-            <dl>
-              <div><dt>温度</dt><dd>{selectedZone.temperature}</dd></div>
-              <div><dt>湿度</dt><dd>{selectedZone.humidity}</dd></div>
-              <div><dt>土壤湿度</dt><dd>{selectedZone.soilMoisture}</dd></div>
-            </dl>
-            <p>{selectedZone.action}</p>
-          </article>
           <div className="command-map-panel__footer">
             <span><i /> 实时点位在线</span>
-            <span>拖动旋转地图，点击发光点位查看片区状态</span>
+            <span>拖动旋转地图，点击数据卡片查看片区状态</span>
           </div>
         </section>
 

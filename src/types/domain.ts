@@ -22,6 +22,7 @@ export interface TeaGardenZone {
   id: string;
   name: string;
   position: [number, number, number];
+  cardOffset: [number, number];
   cameraPose: CameraPose;
   markerTone: 'mint' | 'cyan' | 'gold';
   status: string;
