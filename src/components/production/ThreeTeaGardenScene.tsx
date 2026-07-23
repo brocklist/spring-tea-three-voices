@@ -127,25 +127,26 @@ function Terrain({ onReady }: { onReady: () => void }) {
         <meshStandardMaterial
           map={texture}
           emissiveMap={texture}
-          emissive="#c9ffe6"
-          emissiveIntensity={0.16}
+          color="#d4e7d9"
+          emissive="#b8ddca"
+          emissiveIntensity={0.11}
           roughness={0.92}
           metalness={0.02}
           side={DoubleSide}
         />
       </mesh>
       <mesh geometry={geometry} position={[0, 0.012, 0]}>
-        <meshBasicMaterial color="#4df5cc" wireframe transparent opacity={0.045} depthWrite={false} />
+        <meshBasicMaterial color="#3d806a" wireframe transparent opacity={0.025} depthWrite={false} />
       </mesh>
       <Grid
         args={[terrainSize.width, terrainSize.depth]}
         position={[0, 0.075, 0]}
         cellSize={0.72}
-        cellThickness={0.16}
-        cellColor="#1f9679"
+        cellThickness={0.1}
+        cellColor="#28614f"
         sectionSize={3.6}
-        sectionThickness={0.3}
-        sectionColor="#45cda8"
+        sectionThickness={0.18}
+        sectionColor="#5f9e87"
         fadeDistance={17}
         fadeStrength={1}
         infiniteGrid={false}
@@ -245,24 +246,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
   );
 }
 
-function ScanLines() {
-  return (
-    <group position={[0, 0.08, 0]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.15, 2.19, 96]} />
-        <meshBasicMaterial color="#38e8c3" transparent opacity={0.24} side={DoubleSide} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0.58, 0]}>
-        <ringGeometry args={[4.15, 4.17, 96, 1, 0, Math.PI * 0.46]} />
-        <meshBasicMaterial color="#7af7dc" transparent opacity={0.18} side={DoubleSide} />
-      </mesh>
-    </group>
-  );
-}
-
 function TownshipBoundary() {
   const outerPoints = useMemo(() => getTownshipBoundaryPoints(0.11), []);
-  const innerPoints = useMemo(() => getTownshipBoundaryPoints(0.14), []);
   const labelPosition = useMemo<[number, number, number]>(() => {
     const x = -5.7;
     const z = -2.35;
@@ -271,8 +256,7 @@ function TownshipBoundary() {
 
   return (
     <group>
-      <Line points={outerPoints} color="#46f3cf" lineWidth={3.4} transparent opacity={0.18} />
-      <Line points={innerPoints} color="#8dffe2" lineWidth={1.05} transparent opacity={0.9} />
+      <Line points={outerPoints} color="#91e8c7" lineWidth={1.1} transparent opacity={0.62} />
       <Html position={labelPosition} distanceFactor={12} zIndexRange={[2, 0]}>
         <div className="scene-boundary-label" aria-label="春建乡数字孪生范围">
           <span>数字孪生范围</span>
@@ -329,16 +313,22 @@ function ZoneMarkerLabel({ zone, onSelect }: { zone: TeaGardenZone; onSelect: ()
 
 function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selected: boolean; onSelect: () => void }) {
   const position: [number, number, number] = [zone.position[0], getTerrainHeight(zone.position[0], zone.position[2]) + 0.18, zone.position[2]];
-  const color = zone.markerTone === 'gold' ? '#f5c764' : zone.markerTone === 'cyan' ? '#57e7eb' : '#71f5bd';
+  const color = zone.markerTone === 'gold' ? '#c9a75f' : zone.markerTone === 'cyan' ? '#91e8c7' : '#62ddb0';
   const cardPosition: [number, number, number] = [zone.cardOffset[0], selected ? 0.58 : 0.38, zone.cardOffset[1]];
+  const markerPosition: [number, number, number] = [zone.position[0] <= -2.8 ? 0.58 : 0, 0.28, 0];
+  const selectedCardPosition: [number, number, number] = [
+    cardPosition[0] + (zone.position[0] >= 2.8 ? -0.6 : zone.position[0] <= -2.8 ? 0.42 : 0),
+    cardPosition[1],
+    cardPosition[2],
+  ];
 
   return (
     <group position={position}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={selected ? [0.28, 0.36, 40] : [0.22, 0.28, 40]} />
-        <meshBasicMaterial color={color} transparent opacity={0.88} side={DoubleSide} />
+        <meshBasicMaterial color={color} transparent opacity={0.72} side={DoubleSide} />
       </mesh>
-      <Html position={selected ? cardPosition : [0, 0.28, 0]} center={!selected} distanceFactor={selected ? 8.3 : 11.6} zIndexRange={[8, 0]}>
+      <Html position={selected ? selectedCardPosition : markerPosition} center={!selected} distanceFactor={selected ? 8.3 : 11.6} zIndexRange={[8, 0]}>
         {selected ? <ZoneCard zone={zone} onSelect={onSelect} /> : <ZoneMarkerLabel zone={zone} onSelect={onSelect} />}
       </Html>
     </group>
@@ -353,13 +343,12 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
     <>
       <color attach="background" args={[new Color('#06140f')]} />
       <fog attach="fog" args={['#06140f', 10, 23]} />
-      <ambientLight intensity={0.94} color="#b3ead4" />
-      <directionalLight position={[-5, 9, 4]} intensity={1.85} color="#d9f5cc" />
-      <pointLight position={[4, 3, -2]} intensity={0.75} color="#36e5c1" distance={11} />
+      <ambientLight intensity={0.82} color="#c9dfd0" />
+      <directionalLight position={[-5, 9, 4]} intensity={1.46} color="#e6edd7" />
+      <pointLight position={[4, 3, -2]} intensity={0.32} color="#62ddb0" distance={11} />
       <Suspense fallback={null}>
         <Terrain onReady={handleReady} />
       </Suspense>
-      <ScanLines />
       <TownshipBoundary />
       {zones.map((zone) => <ZoneMarker key={zone.id} zone={zone} selected={zone.id === selectedZoneId} onSelect={() => onZoneSelect(zone.id)} />)}
       <CameraController pose={focusedZone?.cameraPose ?? overviewCameraPose} resetToken={resetToken} />
