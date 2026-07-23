@@ -305,7 +305,6 @@ function ZoneCard({ zone, onSelect }: { zone: TeaGardenZone; onSelect: () => voi
         <span><small>土壤湿度</small><strong>{zone.soilMoisture}</strong></span>
         <span><small>状态</small><strong>{zone.status}</strong></span>
       </span>
-      <span className="scene-zone-card__action">{zone.action}</span>
     </button>
   );
 }
@@ -339,7 +338,7 @@ function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selecte
         <ringGeometry args={selected ? [0.28, 0.36, 40] : [0.22, 0.28, 40]} />
         <meshBasicMaterial color={color} transparent opacity={0.88} side={DoubleSide} />
       </mesh>
-      <Html position={selected ? cardPosition : [0, 0.28, 0]} center={!selected} distanceFactor={selected ? 10.4 : 11.6} zIndexRange={[8, 0]}>
+      <Html position={selected ? cardPosition : [0, 0.28, 0]} center={!selected} distanceFactor={selected ? 8.3 : 11.6} zIndexRange={[8, 0]}>
         {selected ? <ZoneCard zone={zone} onSelect={onSelect} /> : <ZoneMarkerLabel zone={zone} onSelect={onSelect} />}
       </Html>
     </group>
