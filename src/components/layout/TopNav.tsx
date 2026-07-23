@@ -25,9 +25,9 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
       <header className="dashboard-site-header">
         <div className="dashboard-site-header__inner">
           <NavLink to="/production" className="dashboard-site-header__brand" aria-label="一叶问茶·春声三鸣">
-            <span><Sprout className="h-5 w-5" /></span>
+            <span className="dashboard-site-header__brand-mark"><Sprout className="h-5 w-5" /></span>
             <strong>一叶问茶·春声三鸣</strong>
-            <em className="dashboard-site-header__seal" aria-hidden="true">春建</em>
+            <em className="dashboard-site-header__seal" aria-hidden="true">春</em>
           </NavLink>
 
           <div className="dashboard-site-header__title">
