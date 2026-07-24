@@ -25,8 +25,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
       <header className="dashboard-site-header">
         <div className="dashboard-site-header__inner">
           <NavLink to="/production" className="dashboard-site-header__brand" aria-label="一叶问茶·春声三鸣">
-            <span><Sprout className="h-5 w-5" /></span>
-            <strong>一叶问茶·春声三鸣</strong>
+            <img className="dashboard-site-header__brand-image" src="/assets/brand/spring-tea-title.png" alt="一叶问茶·春声三鸣" />
           </NavLink>
 
           <div className="dashboard-site-header__title">

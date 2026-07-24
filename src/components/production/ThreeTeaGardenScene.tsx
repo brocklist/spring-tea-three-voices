@@ -6,6 +6,7 @@ import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraPose, TeaGardenZone } from '../../types/domain';
 
 const mapAsset = '/assets/production/chunjian-digital-twin-map-v1.png';
+const terrainCloudAsset = '/assets/production/terrain-edge-cloud.png';
 const terrainSize = { width: 16, depth: 9 };
 const townshipBoundary: Array<[number, number]> = [
   [-6.65, -2.75], [-4.85, -3.55], [-1.55, -3.8], [1.55, -3.62], [4.65, -2.85], [6.65, -1.1],
@@ -16,6 +17,14 @@ const overviewCameraPose: CameraPose = {
   target: [0, 0.1, 0],
   fov: 38,
 };
+const terrainEdgeMist = [
+  { x: -6.45, z: -1.95, lift: 0.5, width: 4.1, height: 2.45, opacity: 0.28, rotation: -0.08 },
+  { x: -4.1, z: 3.12, lift: 0.44, width: 4.7, height: 2.65, opacity: 0.31, rotation: 0.06 },
+  { x: -0.25, z: 3.75, lift: 0.46, width: 5.45, height: 2.9, opacity: 0.34, rotation: -0.04 },
+  { x: 3.8, z: 3.16, lift: 0.47, width: 4.8, height: 2.7, opacity: 0.3, rotation: 0.09 },
+  { x: 6.25, z: 0.85, lift: 0.46, width: 4.0, height: 2.4, opacity: 0.27, rotation: -0.1 },
+  { x: 4.2, z: -3.18, lift: 0.45, width: 4.5, height: 2.55, opacity: 0.24, rotation: 0.05 },
+];
 
 interface ThreeTeaGardenSceneProps {
   zones: TeaGardenZone[];
@@ -127,29 +136,71 @@ function Terrain({ onReady }: { onReady: () => void }) {
         <meshStandardMaterial
           map={texture}
           emissiveMap={texture}
-          emissive="#c9ffe6"
-          emissiveIntensity={0.16}
+          color="#d4e7d9"
+          emissive="#b8ddca"
+          emissiveIntensity={0.11}
           roughness={0.92}
           metalness={0.02}
           side={DoubleSide}
         />
       </mesh>
       <mesh geometry={geometry} position={[0, 0.012, 0]}>
-        <meshBasicMaterial color="#4df5cc" wireframe transparent opacity={0.045} depthWrite={false} />
+        <meshBasicMaterial color="#3d806a" wireframe transparent opacity={0.025} depthWrite={false} />
       </mesh>
       <Grid
         args={[terrainSize.width, terrainSize.depth]}
         position={[0, 0.075, 0]}
         cellSize={0.72}
-        cellThickness={0.16}
-        cellColor="#1f9679"
+        cellThickness={0.1}
+        cellColor="#28614f"
         sectionSize={3.6}
-        sectionThickness={0.3}
-        sectionColor="#45cda8"
+        sectionThickness={0.18}
+        sectionColor="#5f9e87"
         fadeDistance={17}
         fadeStrength={1}
         infiniteGrid={false}
       />
+    </group>
+  );
+}
+
+function TerrainEdgeMist() {
+  const mistTexture = useTexture(terrainCloudAsset);
+  const { gl } = useThree();
+
+  useLayoutEffect(() => {
+    mistTexture.colorSpace = SRGBColorSpace;
+    mistTexture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    mistTexture.needsUpdate = true;
+  }, [gl, mistTexture]);
+
+  useEffect(() => () => {
+    mistTexture.dispose();
+    useTexture.clear(terrainCloudAsset);
+  }, [mistTexture]);
+
+  return (
+    <group>
+      {terrainEdgeMist.map((mist) => (
+        <sprite
+          key={`${mist.x}-${mist.z}`}
+          position={[mist.x, getTerrainHeight(mist.x, mist.z) + mist.lift, mist.z]}
+          scale={[mist.width, mist.height, 1]}
+          rotation={[0, 0, mist.rotation]}
+          renderOrder={1}
+        >
+          <spriteMaterial
+            map={mistTexture}
+            color="#f0f2e5"
+            transparent
+            opacity={mist.opacity}
+            alphaTest={0.02}
+            depthTest={false}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </sprite>
+      ))}
     </group>
   );
 }
@@ -245,24 +296,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
   );
 }
 
-function ScanLines() {
-  return (
-    <group position={[0, 0.08, 0]}>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.15, 2.19, 96]} />
-        <meshBasicMaterial color="#38e8c3" transparent opacity={0.24} side={DoubleSide} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0.58, 0]}>
-        <ringGeometry args={[4.15, 4.17, 96, 1, 0, Math.PI * 0.46]} />
-        <meshBasicMaterial color="#7af7dc" transparent opacity={0.18} side={DoubleSide} />
-      </mesh>
-    </group>
-  );
-}
-
 function TownshipBoundary() {
   const outerPoints = useMemo(() => getTownshipBoundaryPoints(0.11), []);
-  const innerPoints = useMemo(() => getTownshipBoundaryPoints(0.14), []);
   const labelPosition = useMemo<[number, number, number]>(() => {
     const x = -5.7;
     const z = -2.35;
@@ -271,8 +306,7 @@ function TownshipBoundary() {
 
   return (
     <group>
-      <Line points={outerPoints} color="#46f3cf" lineWidth={3.4} transparent opacity={0.18} />
-      <Line points={innerPoints} color="#8dffe2" lineWidth={1.05} transparent opacity={0.9} />
+      <Line points={outerPoints} color="#91e8c7" lineWidth={1.1} transparent opacity={0.62} />
       <Html position={labelPosition} distanceFactor={12} zIndexRange={[2, 0]}>
         <div className="scene-boundary-label" aria-label="春建乡数字孪生范围">
           <span>数字孪生范围</span>
@@ -329,16 +363,22 @@ function ZoneMarkerLabel({ zone, onSelect }: { zone: TeaGardenZone; onSelect: ()
 
 function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selected: boolean; onSelect: () => void }) {
   const position: [number, number, number] = [zone.position[0], getTerrainHeight(zone.position[0], zone.position[2]) + 0.18, zone.position[2]];
-  const color = zone.markerTone === 'gold' ? '#f5c764' : zone.markerTone === 'cyan' ? '#57e7eb' : '#71f5bd';
+  const color = zone.markerTone === 'gold' ? '#c9a75f' : zone.markerTone === 'cyan' ? '#91e8c7' : '#62ddb0';
   const cardPosition: [number, number, number] = [zone.cardOffset[0], selected ? 0.58 : 0.38, zone.cardOffset[1]];
+  const markerPosition: [number, number, number] = [zone.position[0] <= -2.8 ? 0.58 : 0, 0.28, 0];
+  const selectedCardPosition: [number, number, number] = [
+    cardPosition[0] + (zone.position[0] >= 2.8 ? -0.6 : zone.position[0] <= -2.8 ? 0.42 : 0),
+    cardPosition[1],
+    cardPosition[2],
+  ];
 
   return (
     <group position={position}>
       <mesh rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={selected ? [0.28, 0.36, 40] : [0.22, 0.28, 40]} />
-        <meshBasicMaterial color={color} transparent opacity={0.88} side={DoubleSide} />
+        <meshBasicMaterial color={color} transparent opacity={0.72} side={DoubleSide} />
       </mesh>
-      <Html position={selected ? cardPosition : [0, 0.28, 0]} center={!selected} distanceFactor={selected ? 8.3 : 11.6} zIndexRange={[8, 0]}>
+      <Html position={selected ? selectedCardPosition : markerPosition} center={!selected} distanceFactor={selected ? 8.3 : 11.6} zIndexRange={[8, 0]}>
         {selected ? <ZoneCard zone={zone} onSelect={onSelect} /> : <ZoneMarkerLabel zone={zone} onSelect={onSelect} />}
       </Html>
     </group>
@@ -353,13 +393,15 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
     <>
       <color attach="background" args={[new Color('#06140f')]} />
       <fog attach="fog" args={['#06140f', 10, 23]} />
-      <ambientLight intensity={0.94} color="#b3ead4" />
-      <directionalLight position={[-5, 9, 4]} intensity={1.85} color="#d9f5cc" />
-      <pointLight position={[4, 3, -2]} intensity={0.75} color="#36e5c1" distance={11} />
+      <ambientLight intensity={0.82} color="#c9dfd0" />
+      <directionalLight position={[-5, 9, 4]} intensity={1.46} color="#e6edd7" />
+      <pointLight position={[4, 3, -2]} intensity={0.32} color="#62ddb0" distance={11} />
       <Suspense fallback={null}>
         <Terrain onReady={handleReady} />
       </Suspense>
-      <ScanLines />
+      <Suspense fallback={null}>
+        <TerrainEdgeMist />
+      </Suspense>
       <TownshipBoundary />
       {zones.map((zone) => <ZoneMarker key={zone.id} zone={zone} selected={zone.id === selectedZoneId} onSelect={() => onZoneSelect(zone.id)} />)}
       <CameraController pose={focusedZone?.cameraPose ?? overviewCameraPose} resetToken={resetToken} />
