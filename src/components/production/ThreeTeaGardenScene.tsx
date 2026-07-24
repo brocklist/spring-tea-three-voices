@@ -1,11 +1,12 @@
 import { Grid, Html, Line, OrbitControls, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { CanvasTexture, Color, DoubleSide, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
+import { Color, DoubleSide, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraPose, TeaGardenZone } from '../../types/domain';
 
 const mapAsset = '/assets/production/chunjian-digital-twin-map-v1.png';
+const terrainCloudAsset = '/assets/production/terrain-edge-cloud.png';
 const terrainSize = { width: 16, depth: 9 };
 const townshipBoundary: Array<[number, number]> = [
   [-6.65, -2.75], [-4.85, -3.55], [-1.55, -3.8], [1.55, -3.62], [4.65, -2.85], [6.65, -1.1],
@@ -17,12 +18,12 @@ const overviewCameraPose: CameraPose = {
   fov: 38,
 };
 const terrainEdgeMist = [
-  { x: -6.45, z: -1.95, lift: 0.48, width: 3.2, height: 1.12, opacity: 0.3 },
-  { x: -4.1, z: 3.12, lift: 0.42, width: 3.7, height: 1.18, opacity: 0.35 },
-  { x: -0.25, z: 3.75, lift: 0.44, width: 4.4, height: 1.2, opacity: 0.37 },
-  { x: 3.8, z: 3.16, lift: 0.45, width: 3.8, height: 1.14, opacity: 0.34 },
-  { x: 6.25, z: 0.85, lift: 0.44, width: 3.1, height: 1.04, opacity: 0.3 },
-  { x: 4.2, z: -3.18, lift: 0.42, width: 3.5, height: 1.02, opacity: 0.27 },
+  { x: -6.45, z: -1.95, lift: 0.5, width: 4.1, height: 2.45, opacity: 0.28, rotation: -0.08 },
+  { x: -4.1, z: 3.12, lift: 0.44, width: 4.7, height: 2.65, opacity: 0.31, rotation: 0.06 },
+  { x: -0.25, z: 3.75, lift: 0.46, width: 5.45, height: 2.9, opacity: 0.34, rotation: -0.04 },
+  { x: 3.8, z: 3.16, lift: 0.47, width: 4.8, height: 2.7, opacity: 0.3, rotation: 0.09 },
+  { x: 6.25, z: 0.85, lift: 0.46, width: 4.0, height: 2.4, opacity: 0.27, rotation: -0.1 },
+  { x: 4.2, z: -3.18, lift: 0.45, width: 4.5, height: 2.55, opacity: 0.24, rotation: 0.05 },
 ];
 
 interface ThreeTeaGardenSceneProps {
@@ -164,31 +165,19 @@ function Terrain({ onReady }: { onReady: () => void }) {
 }
 
 function TerrainEdgeMist() {
-  const mistTexture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
-    const context = canvas.getContext('2d');
+  const mistTexture = useTexture(terrainCloudAsset);
+  const { gl } = useThree();
 
-    if (!context) {
-      return new CanvasTexture(canvas);
-    }
+  useLayoutEffect(() => {
+    mistTexture.colorSpace = SRGBColorSpace;
+    mistTexture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
+    mistTexture.needsUpdate = true;
+  }, [gl, mistTexture]);
 
-    const gradient = context.createRadialGradient(128, 128, 8, 128, 128, 128);
-    gradient.addColorStop(0, 'rgba(241, 247, 231, 0.72)');
-    gradient.addColorStop(0.36, 'rgba(211, 229, 207, 0.42)');
-    gradient.addColorStop(0.68, 'rgba(156, 192, 170, 0.16)');
-    gradient.addColorStop(1, 'rgba(156, 192, 170, 0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
-  }, []);
-
-  useEffect(() => () => mistTexture.dispose(), [mistTexture]);
+  useEffect(() => () => {
+    mistTexture.dispose();
+    useTexture.clear(terrainCloudAsset);
+  }, [mistTexture]);
 
   return (
     <group>
@@ -197,13 +186,15 @@ function TerrainEdgeMist() {
           key={`${mist.x}-${mist.z}`}
           position={[mist.x, getTerrainHeight(mist.x, mist.z) + mist.lift, mist.z]}
           scale={[mist.width, mist.height, 1]}
+          rotation={[0, 0, mist.rotation]}
           renderOrder={1}
         >
           <spriteMaterial
             map={mistTexture}
-            color="#e2eddc"
+            color="#f0f2e5"
             transparent
             opacity={mist.opacity}
+            alphaTest={0.02}
             depthTest={false}
             depthWrite={false}
             toneMapped={false}
@@ -408,7 +399,9 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
       <Suspense fallback={null}>
         <Terrain onReady={handleReady} />
       </Suspense>
-      <TerrainEdgeMist />
+      <Suspense fallback={null}>
+        <TerrainEdgeMist />
+      </Suspense>
       <TownshipBoundary />
       {zones.map((zone) => <ZoneMarker key={zone.id} zone={zone} selected={zone.id === selectedZoneId} onSelect={() => onZoneSelect(zone.id)} />)}
       <CameraController pose={focusedZone?.cameraPose ?? overviewCameraPose} resetToken={resetToken} />
