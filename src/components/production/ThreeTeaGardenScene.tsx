@@ -1,29 +1,25 @@
 import { Grid, Html, Line, OrbitControls, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Color, DoubleSide, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
+import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraPose, TeaGardenZone } from '../../types/domain';
 
-const mapAsset = '/assets/production/chunjian-digital-twin-map-v1.png';
+const mapAsset = '/assets/production/chunjian-digital-twin-map-v2.png';
 const terrainCloudAsset = '/assets/production/terrain-edge-cloud.png';
-const terrainSize = { width: 16, depth: 9 };
+const terrainSize = { width: 20, depth: 11.25 };
 const townshipBoundary: Array<[number, number]> = [
-  [-6.65, -2.75], [-4.85, -3.55], [-1.55, -3.8], [1.55, -3.62], [4.65, -2.85], [6.65, -1.1],
-  [6.35, 1.35], [4.95, 2.95], [2.05, 3.72], [-1.3, 3.58], [-4.5, 2.85], [-6.35, 1.2], [-6.8, -1.35], [-6.65, -2.75],
+  [-8.75, -3.4], [-6.95, -4.55], [-3.25, -4.92], [0.65, -4.82], [4.65, -4.32], [8.35, -2.3],
+  [8.8, 0.9], [7.05, 3.9], [3.25, 4.88], [-0.85, 4.72], [-5.65, 4.2], [-8.45, 1.72], [-8.82, -1.35], [-8.75, -3.4],
 ];
 const overviewCameraPose: CameraPose = {
-  position: [6.55, 5.85, 7.15],
+  position: [8.25, 7.05, 9.35],
   target: [0, 0.1, 0],
-  fov: 38,
+  fov: 39,
 };
 const terrainEdgeMist = [
-  { x: -6.45, z: -1.95, lift: 0.5, width: 4.1, height: 2.45, opacity: 0.28, rotation: -0.08 },
-  { x: -4.1, z: 3.12, lift: 0.44, width: 4.7, height: 2.65, opacity: 0.31, rotation: 0.06 },
-  { x: -0.25, z: 3.75, lift: 0.46, width: 5.45, height: 2.9, opacity: 0.34, rotation: -0.04 },
-  { x: 3.8, z: 3.16, lift: 0.47, width: 4.8, height: 2.7, opacity: 0.3, rotation: 0.09 },
-  { x: 6.25, z: 0.85, lift: 0.46, width: 4.0, height: 2.4, opacity: 0.27, rotation: -0.1 },
-  { x: 4.2, z: -3.18, lift: 0.45, width: 4.5, height: 2.55, opacity: 0.24, rotation: 0.05 },
+  { x: -7.7, z: 2.3, lift: 0.68, width: 5.4, depth: 3.2, opacity: 0.28, rotation: 0.05 },
+  { x: 2.25, z: -4.48, lift: 0.67, width: 6.2, depth: 2.8, opacity: 0.26, rotation: -0.04 },
 ];
 
 interface ThreeTeaGardenSceneProps {
@@ -41,11 +37,12 @@ interface SceneFallbackProps {
 }
 
 function getTerrainHeight(x: number, z: number) {
-  const broadSlope = 0.22 * Math.sin((x + 1.4) * 0.72) * Math.cos((z - 0.35) * 0.65);
-  const northernRidge = 0.32 * Math.exp(-((x + 2.2) ** 2 + (z + 1.4) ** 2) / 7);
-  const easternRidge = 0.42 * Math.exp(-((x - 3.3) ** 2 + (z - 0.4) ** 2) / 5);
-  const teaTerrace = 0.09 * Math.sin(x * 3.4 + z * 1.4);
-  return broadSlope + northernRidge + easternRidge + teaTerrace;
+  const broadSlope = 0.2 * Math.sin((x + 1.4) * 0.54) * Math.cos((z - 0.35) * 0.58);
+  const westernRidge = 0.31 * Math.exp(-((x + 4.7) ** 2 + (z - 1.8) ** 2) / 12);
+  const centralBasin = 0.24 * Math.exp(-((x - 0.6) ** 2 + (z + 0.7) ** 2) / 18);
+  const easternRidge = 0.42 * Math.exp(-((x - 5.7) ** 2 + (z - 0.7) ** 2) / 11);
+  const teaTerrace = 0.075 * Math.sin(x * 2.7 + z * 1.15);
+  return broadSlope + westernRidge + centralBasin + easternRidge + teaTerrace;
 }
 
 function getTownshipBoundaryPoints(offset = 0.12): Array<[number, number, number]> {
@@ -104,7 +101,7 @@ function Terrain({ onReady }: { onReady: () => void }) {
   const texture = useTexture(mapAsset);
   const { gl } = useThree();
   const geometry = useMemo(() => {
-    const nextGeometry = new PlaneGeometry(terrainSize.width, terrainSize.depth, 72, 40);
+    const nextGeometry = new PlaneGeometry(terrainSize.width, terrainSize.depth, 84, 48);
     nextGeometry.rotateX(-Math.PI / 2);
     const positions = nextGeometry.attributes.position;
 
@@ -150,13 +147,13 @@ function Terrain({ onReady }: { onReady: () => void }) {
       <Grid
         args={[terrainSize.width, terrainSize.depth]}
         position={[0, 0.075, 0]}
-        cellSize={0.72}
+        cellSize={0.84}
         cellThickness={0.1}
         cellColor="#28614f"
-        sectionSize={3.6}
+        sectionSize={4.2}
         sectionThickness={0.18}
         sectionColor="#5f9e87"
-        fadeDistance={17}
+        fadeDistance={21}
         fadeStrength={1}
         infiniteGrid={false}
       />
@@ -179,28 +176,56 @@ function TerrainEdgeMist() {
     useTexture.clear(terrainCloudAsset);
   }, [mistTexture]);
 
+  const cloudGeometry = useMemo(() => {
+    return new PlaneGeometry(1, 1, 1, 1);
+  }, []);
+  const particles = useMemo(() => {
+    const values: number[] = [];
+
+    for (let index = 0; index < 48; index += 1) {
+      const side = index % 4;
+      const step = (index * 0.61803398875) % 1;
+      const offset = ((index * 0.37) % 1) - 0.5;
+      const x = side === 0 ? -9.2 + offset * 0.55 : side === 1 ? 9.2 + offset * 0.55 : -8.9 + step * 17.8;
+      const z = side === 2 ? -5.12 + offset * 0.42 : side === 3 ? 5.12 + offset * 0.42 : -4.7 + step * 9.4;
+      values.push(x, getTerrainHeight(x, z) + 0.26 + ((index % 5) * 0.035), z);
+    }
+
+    const pointsGeometry = new BufferGeometry();
+    pointsGeometry.setAttribute('position', new Float32BufferAttribute(values, 3));
+    return pointsGeometry;
+  }, []);
+
+  useEffect(() => () => {
+    cloudGeometry.dispose();
+    particles.dispose();
+  }, [cloudGeometry, particles]);
+
   return (
-    <group>
+    <group renderOrder={1}>
       {terrainEdgeMist.map((mist) => (
-        <sprite
+        <mesh
           key={`${mist.x}-${mist.z}`}
+          geometry={cloudGeometry}
           position={[mist.x, getTerrainHeight(mist.x, mist.z) + mist.lift, mist.z]}
-          scale={[mist.width, mist.height, 1]}
-          rotation={[0, 0, mist.rotation]}
-          renderOrder={1}
+          rotation={[-0.95, mist.rotation, 0]}
+          scale={[mist.width, mist.depth, 1]}
         >
-          <spriteMaterial
+          <meshBasicMaterial
             map={mistTexture}
-            color="#f0f2e5"
+            color="#e8eddf"
             transparent
             opacity={mist.opacity}
-            alphaTest={0.02}
+            alphaTest={0.025}
             depthTest={false}
             depthWrite={false}
             toneMapped={false}
           />
-        </sprite>
+        </mesh>
       ))}
+      <points geometry={particles}>
+        <pointsMaterial color="#d6ead8" size={0.04} transparent opacity={0.16} depthTest={false} depthWrite={false} sizeAttenuation />
+      </points>
     </group>
   );
 }
@@ -284,8 +309,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
       enabled={controlsEnabled}
       enablePan={false}
       enableDamping={false}
-      minDistance={4.6}
-      maxDistance={13}
+      minDistance={5.8}
+      maxDistance={16}
       minPolarAngle={0.56}
       maxPolarAngle={1.2}
       minAzimuthAngle={-1.2}
@@ -299,8 +324,8 @@ function CameraController({ pose, resetToken }: { pose: CameraPose; resetToken: 
 function TownshipBoundary() {
   const outerPoints = useMemo(() => getTownshipBoundaryPoints(0.11), []);
   const labelPosition = useMemo<[number, number, number]>(() => {
-    const x = -5.7;
-    const z = -2.35;
+    const x = -7.7;
+    const z = -3.1;
     return [x, getTerrainHeight(x, z) + 0.32, z];
   }, []);
 
@@ -362,14 +387,21 @@ function ZoneMarkerLabel({ zone, onSelect }: { zone: TeaGardenZone; onSelect: ()
 }
 
 function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selected: boolean; onSelect: () => void }) {
+  const { size } = useThree();
+  const isCompact = size.width < 600;
   const position: [number, number, number] = [zone.position[0], getTerrainHeight(zone.position[0], zone.position[2]) + 0.18, zone.position[2]];
   const color = zone.markerTone === 'gold' ? '#c9a75f' : zone.markerTone === 'cyan' ? '#91e8c7' : '#62ddb0';
   const cardPosition: [number, number, number] = [zone.cardOffset[0], selected ? 0.58 : 0.38, zone.cardOffset[1]];
-  const markerPosition: [number, number, number] = [zone.position[0] <= -2.8 ? 0.58 : 0, 0.28, 0];
+  const markerPosition: [number, number, number] = [zone.position[0] <= -4 ? 0.58 : 0, 0.28, 0];
   const selectedCardPosition: [number, number, number] = [
-    cardPosition[0] + (zone.position[0] >= 2.8 ? -0.6 : zone.position[0] <= -2.8 ? 0.42 : 0),
+    cardPosition[0] + (zone.position[0] >= 4 ? -1.3 : zone.position[0] <= -4 ? 0.54 : 0),
     cardPosition[1],
     cardPosition[2],
+  ];
+  const compactSelectedCardPosition: [number, number, number] = [
+    selectedCardPosition[0] + (zone.position[0] >= 2 ? -1.35 : zone.position[0] <= -2 ? 1.15 : 0),
+    selectedCardPosition[1],
+    selectedCardPosition[2],
   ];
 
   return (
@@ -378,7 +410,12 @@ function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selecte
         <ringGeometry args={selected ? [0.28, 0.36, 40] : [0.22, 0.28, 40]} />
         <meshBasicMaterial color={color} transparent opacity={0.72} side={DoubleSide} />
       </mesh>
-      <Html position={selected ? selectedCardPosition : markerPosition} center={!selected} distanceFactor={selected ? 8.3 : 11.6} zIndexRange={[8, 0]}>
+      <Html
+        position={selected ? (isCompact ? compactSelectedCardPosition : selectedCardPosition) : markerPosition}
+        center={isCompact || !selected}
+        distanceFactor={selected ? (isCompact ? 11.2 : 8.3) : 11.6}
+        zIndexRange={[8, 0]}
+      >
         {selected ? <ZoneCard zone={zone} onSelect={onSelect} /> : <ZoneMarkerLabel zone={zone} onSelect={onSelect} />}
       </Html>
     </group>
