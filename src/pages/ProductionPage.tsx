@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
@@ -78,8 +78,9 @@ interface ProductionPageProps {
 
 export function ProductionPage({ careMode = false, onCareModeChange }: ProductionPageProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const reducedMotion = useReducedMotion();
-  const fromIntro = Boolean((location.state as { fromIntro?: boolean } | null)?.fromIntro) && !careMode;
+  const [fromIntro] = useState(() => Boolean((location.state as { fromIntro?: boolean } | null)?.fromIntro) && !careMode);
   const [introHandoffVisible, setIntroHandoffVisible] = useState(fromIntro);
   const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
@@ -130,6 +131,11 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
     if (handoffTimeout.current) window.clearTimeout(handoffTimeout.current);
     handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), reducedMotion ? 0 : 1_200);
   }, [fromIntro, reducedMotion]);
+
+  useEffect(() => {
+    if (!fromIntro) return;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [fromIntro, location.pathname, navigate]);
 
   useEffect(() => {
     if (!fromIntro) return;
