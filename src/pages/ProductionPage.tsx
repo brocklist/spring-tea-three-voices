@@ -17,7 +17,9 @@ import {
   Wind,
   type LucideIcon,
 } from 'lucide-react';
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
@@ -75,6 +77,10 @@ interface ProductionPageProps {
 }
 
 export function ProductionPage({ careMode = false, onCareModeChange }: ProductionPageProps) {
+  const location = useLocation();
+  const reducedMotion = useReducedMotion();
+  const fromIntro = Boolean((location.state as { fromIntro?: boolean } | null)?.fromIntro) && !careMode;
+  const [introHandoffVisible, setIntroHandoffVisible] = useState(fromIntro);
   const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -83,6 +89,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
   const [sceneResetToken, setSceneResetToken] = useState(0);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
+  const handoffTimeout = useRef<number>();
 
   useEffect(() => {
     let ignore = false;
@@ -117,6 +124,20 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
       window.clearInterval(timer);
     };
   }, [weatherLocation]);
+
+  const completeIntroHandoff = useCallback(() => {
+    if (!fromIntro) return;
+    if (handoffTimeout.current) window.clearTimeout(handoffTimeout.current);
+    handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), reducedMotion ? 0 : 1_200);
+  }, [fromIntro, reducedMotion]);
+
+  useEffect(() => {
+    if (!fromIntro) return;
+    handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), 1_800);
+    return () => {
+      if (handoffTimeout.current) window.clearTimeout(handoffTimeout.current);
+    };
+  }, [fromIntro]);
 
   if (careMode) {
     return (
@@ -197,6 +218,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
                 focusedZoneId={focusedZoneId}
                 resetToken={sceneResetToken}
                 onZoneSelect={selectZone}
+                onSceneReady={completeIntroHandoff}
               />
             </Suspense>
           </div>
@@ -271,6 +293,20 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
           </DashboardPanel>
         </section>
       </div>
+      <AnimatePresence>
+        {introHandoffVisible ? (
+          <motion.div
+            className="production-intro-handoff"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0.1 : 0.58, ease: [0.22, 1, 0.36, 1] }}
+            aria-hidden="true"
+          >
+            <img src="/assets/intro/intro-fallback.png" alt="" />
+            <span>正在进入春建茶园</span>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </main>
   );
 }

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "generate:intro": "node scripts/generate-intro-particles.mjs",
     "build": "tsc -b && vite build && node scripts/sites-postbuild.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc -b"

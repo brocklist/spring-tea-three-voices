@@ -1,6 +1,6 @@
 import { Grid, Html, Line, OrbitControls, useTexture } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Component, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraPose, TeaGardenZone } from '../../types/domain';
@@ -28,6 +28,7 @@ interface ThreeTeaGardenSceneProps {
   focusedZoneId?: string;
   resetToken: number;
   onZoneSelect: (zoneId: string) => void;
+  onSceneReady?: () => void;
 }
 
 interface SceneFallbackProps {
@@ -422,9 +423,14 @@ function ZoneMarker({ zone, selected, onSelect }: { zone: TeaGardenZone; selecte
   );
 }
 
-function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZoneSelect }: ThreeTeaGardenSceneProps) {
+function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZoneSelect, onSceneReady }: ThreeTeaGardenSceneProps) {
   const focusedZone = zones.find((zone) => zone.id === focusedZoneId);
-  const handleReady = useMemo(() => () => undefined, []);
+  const readySent = useRef(false);
+  const handleReady = useCallback(() => {
+    if (readySent.current) return;
+    readySent.current = true;
+    onSceneReady?.();
+  }, [onSceneReady]);
 
   return (
     <>
@@ -446,7 +452,7 @@ function TeaGardenWorld({ zones, selectedZoneId, focusedZoneId, resetToken, onZo
   );
 }
 
-export function ThreeTeaGardenScene({ zones, selectedZoneId, focusedZoneId, resetToken, onZoneSelect }: ThreeTeaGardenSceneProps) {
+export function ThreeTeaGardenScene({ zones, selectedZoneId, focusedZoneId, resetToken, onZoneSelect, onSceneReady }: ThreeTeaGardenSceneProps) {
   const [isVisible, setIsVisible] = useState(() => typeof document === 'undefined' || document.visibilityState !== 'hidden');
   const webglAvailable = useMemo(supportsWebGL, []);
 
@@ -455,6 +461,10 @@ export function ThreeTeaGardenScene({ zones, selectedZoneId, focusedZoneId, rese
     document.addEventListener('visibilitychange', syncVisibility);
     return () => document.removeEventListener('visibilitychange', syncVisibility);
   }, []);
+
+  useEffect(() => {
+    if (!webglAvailable) onSceneReady?.();
+  }, [onSceneReady, webglAvailable]);
 
   const fallback = <MapFallback zones={zones} selectedZoneId={selectedZoneId} onZoneSelect={onZoneSelect} />;
 
@@ -472,7 +482,7 @@ export function ThreeTeaGardenScene({ zones, selectedZoneId, focusedZoneId, rese
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
         fallback={fallback}
       >
-        <TeaGardenWorld zones={zones} selectedZoneId={selectedZoneId} focusedZoneId={focusedZoneId} resetToken={resetToken} onZoneSelect={onZoneSelect} />
+        <TeaGardenWorld zones={zones} selectedZoneId={selectedZoneId} focusedZoneId={focusedZoneId} resetToken={resetToken} onZoneSelect={onZoneSelect} onSceneReady={onSceneReady} />
       </Canvas>
     </SceneErrorBoundary>
   );
