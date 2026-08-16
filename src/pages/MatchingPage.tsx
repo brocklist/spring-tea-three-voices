@@ -1,5 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useId, useMemo, useState } from 'react';
 import { ArrowRight, BriefcaseBusiness, Building2, FileUp, Sprout, Users, X } from 'lucide-react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Hero } from '../components/ui/Hero';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { MatchResultCard } from '../components/matching/MatchResultCard';
@@ -8,6 +9,7 @@ import { defaultGardenResources, defaultStudentProjects, heroAssets, matchTags }
 import { buildMatchResults } from '../lib/matching';
 import { readStorage, writeStorage } from '../lib/storage';
 import type { StudentProject, TeaGardenResource } from '../types/domain';
+import { dialogSpring } from '../lib/motion';
 
 const PROJECTS_KEY = 'spring-tea-student-projects';
 const GARDENS_KEY = 'spring-tea-garden-resources';
@@ -282,18 +284,36 @@ function DialogWindow({
   children: ReactNode;
   onClose: () => void;
 }) {
-  if (!open) {
-    return null;
-  }
+  const reducedMotion = useReducedMotion();
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6">
-      <button type="button" aria-label="关闭窗口" className="absolute inset-0 bg-tea-ink/62 backdrop-blur-sm" onClick={onClose} />
-      <section
+    <AnimatePresence>
+      {open ? (
+      <motion.div
+        className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: reducedMotion ? 0.1 : 0.2 }}
+      >
+      <motion.button
+        type="button"
+        aria-label="关闭窗口"
+        className="absolute inset-0 bg-tea-ink/62 backdrop-blur-sm"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      />
+      <motion.section
         role="dialog"
         aria-modal="true"
         aria-labelledby="matching-dialog-title"
         className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-5 shadow-2xl sm:p-7"
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 28, scale: 0.975 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.985 }}
+        transition={reducedMotion ? { duration: 0.1 } : dialogSpring}
       >
         <div className="sticky top-0 z-10 -mx-5 -mt-5 flex items-start justify-between gap-4 border-b border-tea-ink/8 bg-white/96 px-5 py-5 backdrop-blur sm:-mx-7 sm:-mt-7 sm:px-7">
           <div>
@@ -316,8 +336,10 @@ function DialogWindow({
           </button>
         </div>
         <div className="pt-6">{children}</div>
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 

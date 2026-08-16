@@ -17,7 +17,9 @@ import {
   Wind,
   type LucideIcon,
 } from 'lucide-react';
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
 import { WeatherLocationSelector } from '../components/production/WeatherLocationSelector';
@@ -75,6 +77,11 @@ interface ProductionPageProps {
 }
 
 export function ProductionPage({ careMode = false, onCareModeChange }: ProductionPageProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
+  const [fromIntro] = useState(() => Boolean((location.state as { fromIntro?: boolean } | null)?.fromIntro) && !careMode);
+  const [introHandoffVisible, setIntroHandoffVisible] = useState(fromIntro);
   const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -83,6 +90,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
   const [sceneResetToken, setSceneResetToken] = useState(0);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
+  const handoffTimeout = useRef<number>();
 
   useEffect(() => {
     let ignore = false;
@@ -118,6 +126,25 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
     };
   }, [weatherLocation]);
 
+  const completeIntroHandoff = useCallback(() => {
+    if (!fromIntro) return;
+    if (handoffTimeout.current) window.clearTimeout(handoffTimeout.current);
+    handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), reducedMotion ? 0 : 1_200);
+  }, [fromIntro, reducedMotion]);
+
+  useEffect(() => {
+    if (!fromIntro) return;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [fromIntro, location.pathname, navigate]);
+
+  useEffect(() => {
+    if (!fromIntro) return;
+    handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), 1_800);
+    return () => {
+      if (handoffTimeout.current) window.clearTimeout(handoffTimeout.current);
+    };
+  }, [fromIntro]);
+
   if (careMode) {
     return (
       <ElderCareProductionPage
@@ -148,7 +175,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
     <main className="production-dashboard production-command">
       <div className="command-grid">
         <aside className="command-column command-column--left">
-          <DashboardPanel number="01" title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun} priority="primary" tone="gold">
+          <DashboardPanel number="01" title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun} priority="primary" tone="gold" variant="weather">
             <WeatherLocationSelector compact location={weatherLocation} loading={weatherLoading} error={weatherError} onChange={setWeatherLocation} />
             <div className="command-weather-summary">
               <div className="command-weather-summary__condition">
@@ -167,7 +194,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="02" title="今日茶园生产态势" icon={Activity}>
+          <DashboardPanel number="02" title="今日茶园生产态势" icon={Activity} variant="status">
             <div className="command-status-grid">
               <StatusTile label="今日作业窗口" value="适宜采摘" icon={Leaf} />
               <StatusTile label="重点巡护片区" value="东坡低洼区" icon={MapPin} tone="orange" />
@@ -175,7 +202,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="03" title="老年关怀模式" icon={HeartHandshake}>
+          <DashboardPanel number="03" title="老年关怀模式" icon={HeartHandshake} variant="care">
             <button type="button" className="command-care-toggle" onClick={() => onCareModeChange?.(true)}>
               <span className="command-care-toggle__icon"><HeartHandshake className="h-5 w-5" /></span>
               <span><strong>一键开启</strong><small>放大字体、简化信息、保留关键提醒</small></span>
@@ -197,6 +224,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
                 focusedZoneId={focusedZoneId}
                 resetToken={sceneResetToken}
                 onZoneSelect={selectZone}
+                onSceneReady={completeIntroHandoff}
               />
             </Suspense>
           </div>
@@ -208,13 +236,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         </section>
 
         <aside className="command-column command-column--right">
-          <DashboardPanel number="04" title="茶园环境监测驾驶舱" icon={Waves} priority="primary" tone="ivory">
+          <DashboardPanel number="04" title="茶园环境监测驾驶舱" icon={Waves} priority="primary" tone="ivory" variant="environment">
             <div className="command-gauge-grid">
               {sensorMetrics.map((metric) => <SensorGauge key={metric.id} metric={metric} variant="dashboard" />)}
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="05" title="智能农事建议" icon={Sprout} priority="primary" tone="orange">
+          <DashboardPanel number="05" title="智能农事建议" icon={Sprout} priority="primary" tone="orange" variant="advice">
             <div className="command-advice-list">
               {operationAdvice.map((item) => {
                 const Icon = item.icon;
@@ -229,13 +257,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="06" title="茶叶病虫害图片识别" icon={AlertTriangle} tone="orange">
+          <DashboardPanel number="06" title="茶叶病虫害图片识别" icon={AlertTriangle} tone="orange" variant="pest">
             <PestDetectionPanel variant="dashboard" />
           </DashboardPanel>
         </aside>
 
         <section className="command-bottom command-bottom--knowledge">
-          <DashboardPanel number="07" title="农业知识辅助" icon={BookOpenCheck} tone="ivory">
+          <DashboardPanel number="07" title="农业知识辅助" icon={BookOpenCheck} tone="ivory" variant="knowledge">
             <div className="command-knowledge-layout">
               <div className="command-article-strip">
                 {knowledgeArticles.map((article) => (
@@ -258,7 +286,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         </section>
 
         <section className="command-bottom command-bottom--overview">
-          <DashboardPanel number="08" title="平台总览" subtitle="演示数据" icon={ShieldCheck} tone="gold">
+          <DashboardPanel number="08" title="平台总览" subtitle="演示数据" icon={ShieldCheck} tone="gold" variant="overview">
             <div className="command-audience-list">
               <span>茶农</span><i>›</i><span>茶企</span><i>›</i><span>消费者</span><i>›</i><span>高校学生团队</span>
             </div>
@@ -271,6 +299,20 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
           </DashboardPanel>
         </section>
       </div>
+      <AnimatePresence>
+        {introHandoffVisible ? (
+          <motion.div
+            className="production-intro-handoff"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0.1 : 0.58, ease: [0.22, 1, 0.36, 1] }}
+            aria-hidden="true"
+          >
+            <img src="/assets/intro/intro-fallback.png" alt="" />
+            <span>正在进入春建茶园</span>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </main>
   );
 }
@@ -283,6 +325,7 @@ function DashboardPanel({
   children,
   priority = 'standard',
   tone = 'ivory',
+  variant,
 }: {
   number: string;
   title: string;
@@ -291,9 +334,10 @@ function DashboardPanel({
   children: ReactNode;
   priority?: 'primary' | 'standard';
   tone?: 'gold' | 'orange' | 'ivory' | 'mint';
+  variant?: 'weather' | 'status' | 'care' | 'environment' | 'advice' | 'pest' | 'knowledge' | 'overview';
 }) {
   return (
-    <section className={`command-panel command-panel--${priority} command-panel--${tone}`}>
+    <section className={`command-panel command-panel--${priority} command-panel--${tone}${variant ? ` command-panel--${variant}` : ''}`}>
       <header className="command-panel__header">
         <span className="command-panel__number">{number}</span>
         <Icon className="h-4 w-4" />

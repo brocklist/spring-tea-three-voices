@@ -1,4 +1,5 @@
 import { HeartHandshake, Menu, Sprout, X } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 
@@ -24,9 +25,10 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
     return (
       <header className="dashboard-site-header">
         <div className="dashboard-site-header__inner">
-          <NavLink to="/production" className="dashboard-site-header__brand" aria-label="一叶问茶·春声三鸣">
-            <span><Sprout className="h-5 w-5" /></span>
-            <strong>一叶问茶·春声三鸣</strong>
+          <NavLink to="/" className="dashboard-site-header__brand" aria-label="返回一叶问茶首焦动画">
+            <motion.div layoutId="tea-brand-title" className="brand-title brand-title--dashboard">
+              <span>一叶问茶<span className="brand-title__dot">·</span>春声三鸣</span><i aria-hidden="true">春建</i>
+            </motion.div>
           </NavLink>
 
           <div className="dashboard-site-header__title">
@@ -38,6 +40,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
             {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} className={({ isActive }) => `dashboard-site-header__link ${isActive ? 'is-active' : ''}`}>
                 <span>{item.label}</span><small>{item.subtitle}</small>
+                {pathname === item.to ? <motion.i layoutId="dashboard-active-nav" className="dashboard-site-header__active" /> : null}
               </NavLink>
             ))}
           </nav>
@@ -88,7 +91,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <NavLink to="/production" className="flex min-w-0 items-center gap-3">
+          <NavLink to="/" className="flex min-w-0 items-center gap-3" aria-label="返回一叶问茶首焦动画">
             <span className={['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-soft', isProductionDashboard ? 'bg-emerald-400/18 text-emerald-200' : 'bg-tea-ink'].join(' ')}>
               <Sprout className="h-5 w-5" />
             </span>
@@ -119,6 +122,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
             <NavLink key={item.to} to={item.to} className={linkClass}>
               <span>{item.label}</span>
               <span className="text-xs font-medium opacity-70">{item.subtitle}</span>
+              {pathname === item.to ? <motion.i layoutId="site-active-nav" className="site-active-nav" /> : null}
             </NavLink>
           ))}
         </nav>
