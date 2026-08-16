@@ -26,7 +26,9 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
       <header className="dashboard-site-header">
         <div className="dashboard-site-header__inner">
           <NavLink to="/" className="dashboard-site-header__brand" aria-label="返回一叶问茶首焦动画">
-            <motion.img layoutId="tea-brand-title" className="dashboard-site-header__brand-image" src="/assets/brand/spring-tea-title.png" alt="一叶问茶·春声三鸣" />
+            <motion.div layoutId="tea-brand-title" className="brand-title brand-title--dashboard">
+              <span>一叶问茶<span className="brand-title__dot">·</span>春声三鸣</span><i aria-hidden="true">春建</i>
+            </motion.div>
           </NavLink>
 
           <div className="dashboard-site-header__title">

@@ -20,7 +20,7 @@ const targets = [
     normalization: {
       screenAxes: ['x', 'z', 'y'],
       targetWidth: 7.5,
-      depthScale: 0.44,
+      depthScale: 0.72,
       verticalOffset: 0.2,
     },
     transform(point, bounds) {
@@ -29,7 +29,7 @@ const targets = [
       return [
         (point.x - center.x) * scale,
         (point.z - center.z) * scale + 0.2,
-        (point.y - center.y) * scale * 0.44,
+        (point.y - center.y) * scale * 0.72,
       ];
     },
   },
@@ -292,7 +292,7 @@ function writeFallbackPreview(filePath, points) {
 
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 const manifest = {
-  version: 1,
+  version: 2,
   count: PARTICLE_COUNT,
   mobileCount: MOBILE_PARTICLE_COUNT,
   fallbackUrl: '/assets/intro/intro-fallback.png',

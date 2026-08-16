@@ -66,11 +66,9 @@ function IntroLoading() {
         alt=""
       />
       <div className="intro-loading-screen__shade" />
-      <img
-        className="intro-loading-screen__brand"
-        src="/assets/brand/spring-tea-title.png"
-        alt="一叶问茶·春声三鸣"
-      />
+      <div className="brand-title brand-title--loading" aria-label="一叶问茶·春声三鸣">
+        <span>一叶问茶<span className="brand-title__dot">·</span>春声三鸣</span><i aria-hidden="true">春建</i>
+      </div>
       <p><span />正在唤醒春山</p>
     </div>
   );

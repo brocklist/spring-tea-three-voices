@@ -1292,6 +1292,55 @@ select {
   object-fit: contain;
 }
 
+@font-face {
+  font-family: "SpringTeaBrand";
+  src: url("/assets/fonts/ma-shan-zheng-brand.woff2") format("woff2");
+  font-display: swap;
+}
+
+.brand-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34em;
+  min-width: 0;
+  color: #dec27f;
+  font-family: "SpringTeaBrand", "STKaiti", "KaiTi", "STXingkai", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.065em;
+  text-decoration: none;
+  text-shadow: 0 2px 9px rgba(0, 0, 0, 0.26);
+  white-space: nowrap;
+}
+
+.brand-title i {
+  display: grid;
+  width: 1.42em;
+  height: 1.42em;
+  place-items: center;
+  border: 1px solid rgba(161, 48, 29, 0.86);
+  border-radius: 0.12em;
+  color: #c65b42;
+  box-shadow: inset 0 0 0 1px rgba(66, 14, 8, 0.36);
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, serif;
+  font-size: 0.34em;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.brand-title__dot {
+  display: inline-block;
+  margin: 0 0.025em;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, serif;
+  font-size: 0.8em;
+  font-weight: 700;
+  transform: translateY(-0.05em);
+}
+
+.brand-title--dashboard { font-size: clamp(1.8rem, 2.25vw, 2.55rem); }
+
 .dashboard-site-header__brand-mark {
   display: grid;
   width: 1.12rem;
@@ -2229,15 +2278,12 @@ select {
     linear-gradient(180deg, rgba(3, 17, 12, 0.32), transparent 35%, rgba(3, 17, 12, 0.72));
 }
 
-.intro-loading-screen__brand {
+.brand-title--loading {
   position: absolute;
   z-index: 1;
   top: clamp(1rem, 3.2vw, 2.75rem);
   left: clamp(1rem, 4vw, 4.5rem);
-  width: clamp(13rem, 22vw, 22rem);
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.28));
+  font-size: clamp(1.85rem, 3.1vw, 3.15rem);
 }
 
 .intro-loading-screen p {
@@ -2268,6 +2314,13 @@ select {
   width: 100%;
   height: 100%;
 }
+
+.intro-experience__visual canvas {
+  cursor: grab;
+  touch-action: none !important;
+}
+
+.intro-experience__visual canvas:active { cursor: grabbing; }
 
 .intro-experience__visual > img {
   object-fit: cover;
@@ -2306,14 +2359,7 @@ select {
   gap: 1.5rem;
 }
 
-.intro-experience__brand {
-  display: block;
-  width: clamp(13rem, 22vw, 22rem);
-  height: auto;
-  object-fit: contain;
-  object-position: left center;
-  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.28));
-}
+.brand-title--intro { font-size: clamp(1.85rem, 3.1vw, 3.15rem); }
 
 .intro-experience__skip {
   display: inline-flex;
@@ -2540,9 +2586,9 @@ header nav > a > span { position: relative; z-index: 1; }
 }
 
 @media (max-width: 767px) {
-  .intro-loading-screen__brand { width: min(14rem, 62vw); }
+  .brand-title--loading,
+  .brand-title--intro { font-size: clamp(1.55rem, 8.4vw, 2.2rem); }
   .intro-experience__header { align-items: flex-start; }
-  .intro-experience__brand { width: min(14rem, 62vw); }
   .intro-experience__skip { min-height: 2.2rem; padding: 0 0.65rem; font-size: 0.65rem; }
   .intro-experience__copy { bottom: 7.4rem; }
   .intro-experience__copy h1 { font-size: clamp(2.45rem, 14vw, 4rem); }

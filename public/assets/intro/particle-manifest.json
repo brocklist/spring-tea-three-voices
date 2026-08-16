@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "count": 16384,
   "mobileCount": 6144,
   "fallbackUrl": "/assets/intro/intro-fallback.png",
@@ -22,12 +22,12 @@
         "min": [
           -3.7484217171871324,
           -1.1264273870881762,
-          -0.24869557881517002
+          -0.40695640169755093
         ],
         "max": [
           3.7495186447261806,
           1.5309981738062988,
-          0.24901545465211822
+          0.40747983488528433
         ]
       },
       "normalization": {
@@ -37,7 +37,7 @@
           "y"
         ],
         "targetWidth": 7.5,
-        "depthScale": 0.44,
+        "depthScale": 0.72,
         "verticalOffset": 0.2
       }
     },

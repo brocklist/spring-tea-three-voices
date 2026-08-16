@@ -14,17 +14,21 @@ const stageCopy: Record<Exclude<IntroStage, 'loading' | 'exiting' | 'complete'>,
   ready: { index: '03', title: '数智茶鸣', description: '走入茶园数字孪生世界，看见一叶茶背后的实时生长。' },
 };
 
+const INTRO_DURATION = 9;
+const READY_AT = 8;
+const EXIT_ACCELERATION_MS = 900;
+
 function stageForElapsed(elapsed: number): IntroStage {
-  if (elapsed < 0.6) return 'loading';
-  if (elapsed < 3.6) return 'leaf';
-  if (elapsed < 5.4) return 'mountain';
+  if (elapsed < 0.8) return 'loading';
+  if (elapsed < 5.2) return 'leaf';
+  if (elapsed < READY_AT) return 'mountain';
   return 'ready';
 }
 
 export function IntroExperience() {
   const navigate = useNavigate();
   const reducedMotion = useReducedMotion();
-  const [elapsed, setElapsed] = useState(reducedMotion ? 6 : 0);
+  const [elapsed, setElapsed] = useState(reducedMotion ? INTRO_DURATION : 0);
   const [assetsReady, setAssetsReady] = useState(Boolean(reducedMotion));
   const [fallback, setFallback] = useState(Boolean(reducedMotion));
   const [stage, setStage] = useState<IntroStage>(reducedMotion ? 'ready' : 'loading');
@@ -33,7 +37,6 @@ export function IntroExperience() {
   const startedAt = useRef<number>();
   const acceleratedAt = useRef<number>();
   const acceleratedFrom = useRef(0);
-  const touchStartY = useRef<number>();
   const productionPreloaded = useRef(false);
   const elapsedRef = useRef(elapsed);
   const exitStarted = useRef(false);
@@ -51,7 +54,7 @@ export function IntroExperience() {
   const handleSceneFailure = useCallback(() => {
     setFallback(true);
     setAssetsReady(true);
-    setElapsed(6);
+    setElapsed(INTRO_DURATION);
     setStage('ready');
   }, []);
 
@@ -71,12 +74,12 @@ export function IntroExperience() {
       startedAt.current ??= now;
       let nextElapsed = (now - startedAt.current) / 1000;
       if (acceleratedAt.current) {
-        const acceleration = Math.min(1, (now - acceleratedAt.current) / 700);
-        nextElapsed = acceleratedFrom.current + (6 - acceleratedFrom.current) * (1 - ((1 - acceleration) ** 3));
+        const acceleration = Math.min(1, (now - acceleratedAt.current) / EXIT_ACCELERATION_MS);
+        nextElapsed = acceleratedFrom.current + (INTRO_DURATION - acceleratedFrom.current) * (1 - ((1 - acceleration) ** 3));
       }
-      setElapsed(Math.min(6, nextElapsed));
-      elapsedRef.current = Math.min(6, nextElapsed);
-      if (nextElapsed < 6 && !exiting) animationFrame.current = requestAnimationFrame(tick);
+      setElapsed(Math.min(INTRO_DURATION, nextElapsed));
+      elapsedRef.current = Math.min(INTRO_DURATION, nextElapsed);
+      if (nextElapsed < INTRO_DURATION && !exiting) animationFrame.current = requestAnimationFrame(tick);
     }
     animationFrame.current = requestAnimationFrame(tick);
     return () => {
@@ -87,13 +90,13 @@ export function IntroExperience() {
   useEffect(() => {
     elapsedRef.current = elapsed;
     if (!exiting) setStage(stageForElapsed(elapsed));
-    if (elapsed >= 4.8) preloadProduction();
+    if (elapsed >= 7.2) preloadProduction();
   }, [elapsed, exiting, preloadProduction]);
 
   const beginExit = useCallback((immediate = false) => {
     if (exitStarted.current) return;
     const currentElapsed = elapsedRef.current;
-    if (!immediate && currentElapsed < 5.4 && !reducedMotion) {
+    if (!immediate && currentElapsed < READY_AT && !reducedMotion) {
       if (acceleratedAt.current) return;
       acceleratedAt.current = performance.now();
       acceleratedFrom.current = currentElapsed;
@@ -109,43 +112,29 @@ export function IntroExperience() {
   }, [navigate, preloadProduction, reducedMotion]);
 
   useEffect(() => {
-    if (acceleratedAt.current && elapsed >= 5.98 && !exiting) beginExit(true);
+    if (acceleratedAt.current && elapsed >= INTRO_DURATION - 0.02 && !exiting) beginExit(true);
   }, [beginExit, elapsed, exiting]);
 
   useEffect(() => {
     function onWheel(event: WheelEvent) {
-      if (event.deltaY > 12) beginExit(elapsedRef.current >= 5.4);
+      if (event.deltaY > 12) beginExit(elapsedRef.current >= READY_AT);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (['Enter', ' ', 'ArrowDown', 'PageDown'].includes(event.key)) {
         event.preventDefault();
-        beginExit(elapsedRef.current >= 5.4);
+        beginExit(elapsedRef.current >= READY_AT);
       }
-    }
-    function onTouchStart(event: TouchEvent) {
-      touchStartY.current = event.touches[0]?.clientY;
-    }
-    function onTouchEnd(event: TouchEvent) {
-      const endY = event.changedTouches[0]?.clientY;
-      if (touchStartY.current !== undefined && endY !== undefined && touchStartY.current - endY > 42) {
-        beginExit(elapsedRef.current >= 5.4);
-      }
-      touchStartY.current = undefined;
     }
     window.addEventListener('wheel', onWheel, { passive: true });
     window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
     return () => {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchend', onTouchEnd);
     };
   }, [beginExit]);
 
   const visibleStage = stage === 'loading' || stage === 'exiting' || stage === 'complete' ? undefined : stageCopy[stage];
-  const progress = Math.min(100, Math.max(0, (elapsed / 6) * 100));
+  const progress = Math.min(100, Math.max(0, (elapsed / INTRO_DURATION) * 100));
 
   return (
     <main className={`intro-experience${exiting ? ' is-exiting' : ''}${fallback ? ' is-fallback' : ''}`} aria-label="一叶问茶首焦动画">
@@ -167,13 +156,13 @@ export function IntroExperience() {
       <div className="intro-experience__grain" aria-hidden="true" />
 
       <header className="intro-experience__header">
-        <motion.img
+        <motion.div
           layoutId="tea-brand-title"
-          src="/assets/brand/spring-tea-title.png"
-          alt="一叶问茶·春声三鸣"
-          className="intro-experience__brand"
-        />
-        <button type="button" className="intro-experience__skip" onClick={() => beginExit(elapsedRef.current >= 5.4)}>
+          className="brand-title brand-title--intro"
+        >
+          <span>一叶问茶<span className="brand-title__dot">·</span>春声三鸣</span><i aria-hidden="true">春建</i>
+        </motion.div>
+        <button type="button" className="intro-experience__skip" onClick={() => beginExit(elapsedRef.current >= READY_AT)}>
           跳过动画
           <ArrowDown className="h-4 w-4" />
         </button>
@@ -198,7 +187,7 @@ export function IntroExperience() {
 
       <footer className="intro-experience__footer">
         <div className="intro-experience__progress" aria-hidden="true"><i style={{ width: `${progress}%` }} /></div>
-        <button type="button" onClick={() => beginExit(elapsedRef.current >= 5.4)} className={stage === 'ready' ? 'is-ready' : ''}>
+        <button type="button" onClick={() => beginExit(elapsedRef.current >= READY_AT)} className={stage === 'ready' ? 'is-ready' : ''}>
           <ChevronDown className="h-5 w-5" />
           <span>{stage === 'ready' ? '进入数智茶鸣' : '向下探索'}</span>
         </button>

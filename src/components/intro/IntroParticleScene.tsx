@@ -1,4 +1,5 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   AdditiveBlending,
@@ -8,7 +9,9 @@ import {
   MathUtils,
   ShaderMaterial,
   Vector2,
+  Vector3,
 } from 'three';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 
 export type IntroStage = 'loading' | 'leaf' | 'mountain' | 'ready' | 'exiting' | 'complete';
 
@@ -63,8 +66,6 @@ const vertexShader = `
 
     float breathe = sin(uElapsed * 0.72 + seed * 24.0) * 0.018 * (1.0 - mountainMix);
     position += normalize(position + vec3(0.001)) * breathe;
-    position.xy += uPointer * vec2(0.12, 0.08) * (0.35 + abs(position.z) * 0.05);
-
     float exitEase = ease(uExitProgress);
     vec3 exitDirection = normalize(vec3(position.x * 0.15, position.y * 0.12 + 0.08, 1.0));
     position += exitDirection * exitEase * (4.0 + seed * 4.5);
@@ -72,9 +73,11 @@ const vertexShader = `
 
     vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * viewPosition;
-    gl_PointSize = (2.3 + 1.9 * sin(seed * 17.0) * sin(seed * 17.0)) * uPixelRatio;
-    gl_PointSize *= clamp(8.0 / -viewPosition.z, 0.45, 1.6);
-    vDepth = clamp((position.z + 3.0) / 6.0, 0.0, 1.0);
+    float viewDepth = clamp((-viewPosition.z - 5.8) / 7.5, 0.0, 1.0);
+    gl_PointSize = (2.25 + 2.0 * sin(seed * 17.0) * sin(seed * 17.0)) * uPixelRatio;
+    gl_PointSize *= clamp(8.3 / -viewPosition.z, 0.5, 1.75);
+    gl_PointSize *= mix(1.12, 0.82, viewDepth);
+    vDepth = 1.0 - viewDepth;
     vGold = step(0.92, fract(seed * 37.91)) * smoothstep(0.28, 0.8, leafMix);
   }
 `;
@@ -127,7 +130,7 @@ function ParticleField({
   exiting: boolean;
   reducedMotion: boolean;
 }) {
-  const { gl, pointer } = useThree();
+  const { gl } = useThree();
   const material = useMemo(() => new ShaderMaterial({
     vertexShader,
     fragmentShader,
@@ -157,15 +160,15 @@ function ParticleField({
   const exitProgress = useRef(0);
 
   useFrame((state, delta) => {
-    const leafProgress = reducedMotion ? 1 : MathUtils.smoothstep(elapsed, 0.6, 2.7);
-    const mountainProgress = reducedMotion ? 1 : MathUtils.smoothstep(elapsed, 3.6, 5.4);
+    const leafProgress = reducedMotion ? 1 : MathUtils.smoothstep(elapsed, 0.8, 4.0);
+    const mountainProgress = reducedMotion ? 1 : MathUtils.smoothstep(elapsed, 5.2, 8.0);
     exitProgress.current = MathUtils.damp(exitProgress.current, exiting ? 1 : 0, exiting ? 8.5 : 5, delta);
     material.uniforms.uElapsed.value = state.clock.elapsedTime;
     material.uniforms.uLeafProgress.value = leafProgress;
     material.uniforms.uMountainProgress.value = mountainProgress;
     material.uniforms.uExitProgress.value = exitProgress.current;
-    material.uniforms.uPointer.value.x = MathUtils.damp(material.uniforms.uPointer.value.x, reducedMotion ? 0 : pointer.x, 3.2, delta);
-    material.uniforms.uPointer.value.y = MathUtils.damp(material.uniforms.uPointer.value.y, reducedMotion ? 0 : pointer.y, 3.2, delta);
+    material.uniforms.uPointer.value.x = MathUtils.damp(material.uniforms.uPointer.value.x, 0, 3.2, delta);
+    material.uniforms.uPointer.value.y = MathUtils.damp(material.uniforms.uPointer.value.y, 0, 3.2, delta);
   });
 
   useEffect(() => () => {
@@ -174,6 +177,38 @@ function ParticleField({
   }, [geometry, material]);
 
   return <points geometry={geometry} material={material} rotation={[-0.04, -0.12, 0.02]} />;
+}
+
+const defaultCamera = new Vector3(0.78, 0.62, 9.8);
+const defaultTarget = new Vector3(0, 0.05, 0);
+
+function IntroOrbitControls({ exiting, reducedMotion }: Pick<IntroParticleSceneProps, 'exiting' | 'reducedMotion'>) {
+  const controls = useRef<OrbitControlsImpl>(null);
+  const { camera } = useThree();
+
+  useFrame((_, delta) => {
+    if (!exiting) return;
+    camera.position.lerp(defaultCamera, 1 - Math.exp(-4.8 * delta));
+    controls.current?.target.lerp(defaultTarget, 1 - Math.exp(-4.8 * delta));
+    controls.current?.update();
+  });
+
+  return (
+    <OrbitControls
+      ref={controls}
+      target={defaultTarget}
+      enabled={!exiting && !reducedMotion}
+      enablePan={false}
+      enableZoom={false}
+      enableDamping
+      dampingFactor={0.075}
+      rotateSpeed={0.42}
+      minAzimuthAngle={-1.08}
+      maxAzimuthAngle={1.08}
+      minPolarAngle={0.72}
+      maxPolarAngle={2.18}
+    />
+  );
 }
 
 function World({ elapsed, exiting, reducedMotion, onReady, onFailure }: IntroParticleSceneProps) {
@@ -206,6 +241,7 @@ function World({ elapsed, exiting, reducedMotion, onReady, onFailure }: IntroPar
     <>
       <color attach="background" args={[new Color('#03110c')]} />
       {points ? <ParticleField {...points} elapsed={elapsed} exiting={exiting} reducedMotion={reducedMotion} /> : null}
+      <IntroOrbitControls exiting={exiting} reducedMotion={reducedMotion} />
     </>
   );
 }
@@ -239,9 +275,10 @@ export function IntroParticleScene(props: IntroParticleSceneProps) {
     <IntroSceneBoundary onFailure={props.onFailure}>
       <Canvas
         className="intro-particle-canvas"
-        camera={{ position: [0, 0.25, 9.4], fov: 43, near: 0.1, far: 35 }}
+        camera={{ position: [0.78, 0.62, 9.8], fov: 43, near: 0.1, far: 35 }}
         dpr={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 1.25}
         gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
+        style={{ touchAction: 'none' }}
       >
         <World {...props} />
       </Canvas>
