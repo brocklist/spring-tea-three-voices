@@ -202,11 +202,11 @@ function IntroOrbitControls({ exiting, reducedMotion }: Pick<IntroParticleSceneP
       enableZoom={false}
       enableDamping
       dampingFactor={0.075}
-      rotateSpeed={0.42}
-      minAzimuthAngle={-1.08}
-      maxAzimuthAngle={1.08}
-      minPolarAngle={0.72}
-      maxPolarAngle={2.18}
+      rotateSpeed={0.5}
+      minAzimuthAngle={-1.55}
+      maxAzimuthAngle={1.55}
+      minPolarAngle={0.48}
+      maxPolarAngle={2.55}
     />
   );
 }
