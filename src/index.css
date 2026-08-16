@@ -2487,6 +2487,11 @@ select {
   background: rgba(115, 88, 39, 0.22);
 }
 
+.intro-experience__footer button:disabled {
+  cursor: wait;
+  opacity: 0.48;
+}
+
 .intro-experience__footer button:hover,
 .intro-experience__footer button:focus-visible {
   transform: translateY(-1px);

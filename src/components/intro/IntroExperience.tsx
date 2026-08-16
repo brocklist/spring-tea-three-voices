@@ -15,12 +15,14 @@ const stageCopy: Record<Exclude<IntroStage, 'loading' | 'exiting' | 'complete'>,
 };
 
 const INTRO_DURATION = 9;
+const LEAF_READY_AT = 4;
+const MOUNTAIN_START_AT = 5.2;
 const READY_AT = 8;
 const EXIT_ACCELERATION_MS = 900;
 
 function stageForElapsed(elapsed: number): IntroStage {
   if (elapsed < 0.8) return 'loading';
-  if (elapsed < 5.2) return 'leaf';
+  if (elapsed < MOUNTAIN_START_AT) return 'leaf';
   if (elapsed < READY_AT) return 'mountain';
   return 'ready';
 }
@@ -32,6 +34,7 @@ export function IntroExperience() {
   const [assetsReady, setAssetsReady] = useState(Boolean(reducedMotion));
   const [fallback, setFallback] = useState(Boolean(reducedMotion));
   const [stage, setStage] = useState<IntroStage>(reducedMotion ? 'ready' : 'loading');
+  const [mountainEnabled, setMountainEnabled] = useState(Boolean(reducedMotion));
   const [exiting, setExiting] = useState(false);
   const animationFrame = useRef<number>();
   const startedAt = useRef<number>();
@@ -77,21 +80,25 @@ export function IntroExperience() {
         const acceleration = Math.min(1, (now - acceleratedAt.current) / EXIT_ACCELERATION_MS);
         nextElapsed = acceleratedFrom.current + (INTRO_DURATION - acceleratedFrom.current) * (1 - ((1 - acceleration) ** 3));
       }
-      setElapsed(Math.min(INTRO_DURATION, nextElapsed));
-      elapsedRef.current = Math.min(INTRO_DURATION, nextElapsed);
-      if (nextElapsed < INTRO_DURATION && !exiting) animationFrame.current = requestAnimationFrame(tick);
+      const elapsedLimit = mountainEnabled || acceleratedAt.current ? INTRO_DURATION : MOUNTAIN_START_AT;
+      const limitedElapsed = Math.min(elapsedLimit, nextElapsed);
+      setElapsed(limitedElapsed);
+      elapsedRef.current = limitedElapsed;
+      if (limitedElapsed < elapsedLimit && !exiting) animationFrame.current = requestAnimationFrame(tick);
     }
     animationFrame.current = requestAnimationFrame(tick);
     return () => {
       if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
     };
-  }, [assetsReady, exiting, fallback, reducedMotion]);
+  }, [assetsReady, exiting, fallback, mountainEnabled, reducedMotion]);
 
   useEffect(() => {
     elapsedRef.current = elapsed;
-    if (!exiting) setStage(stageForElapsed(elapsed));
+    if (!exiting) {
+      setStage(!mountainEnabled && elapsed >= LEAF_READY_AT ? 'leaf' : stageForElapsed(elapsed));
+    }
     if (elapsed >= 7.2) preloadProduction();
-  }, [elapsed, exiting, preloadProduction]);
+  }, [elapsed, exiting, mountainEnabled, preloadProduction]);
 
   const beginExit = useCallback((immediate = false) => {
     if (exitStarted.current) return;
@@ -117,12 +124,12 @@ export function IntroExperience() {
 
   useEffect(() => {
     function onWheel(event: WheelEvent) {
-      if (event.deltaY > 12) beginExit(elapsedRef.current >= READY_AT);
+      if (event.deltaY > 12 && stage === 'ready') beginExit(true);
     }
     function onKeyDown(event: KeyboardEvent) {
       if (['Enter', ' ', 'ArrowDown', 'PageDown'].includes(event.key)) {
         event.preventDefault();
-        beginExit(elapsedRef.current >= READY_AT);
+        if (stage === 'ready') beginExit(true);
       }
     }
     window.addEventListener('wheel', onWheel, { passive: true });
@@ -131,10 +138,28 @@ export function IntroExperience() {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [beginExit]);
+  }, [beginExit, stage]);
+
+  const handlePrimaryAction = useCallback(() => {
+    if (stage === 'leaf' && elapsedRef.current >= LEAF_READY_AT && !mountainEnabled) {
+      startedAt.current = performance.now() - elapsedRef.current * 1000;
+      setMountainEnabled(true);
+      return;
+    }
+
+    if (stage === 'ready') beginExit(true);
+  }, [beginExit, mountainEnabled, stage]);
 
   const visibleStage = stage === 'loading' || stage === 'exiting' || stage === 'complete' ? undefined : stageCopy[stage];
   const progress = Math.min(100, Math.max(0, (elapsed / INTRO_DURATION) * 100));
+  const primaryLabel = stage === 'ready'
+    ? '进入数智茶鸣'
+    : stage === 'mountain'
+      ? '山野成形中'
+      : stage === 'leaf' && elapsed >= LEAF_READY_AT
+        ? '显现春山'
+        : '正在汇聚';
+  const primaryDisabled = stage === 'loading' || stage === 'mountain' || (stage === 'leaf' && elapsed < LEAF_READY_AT);
 
   return (
     <main className={`intro-experience${exiting ? ' is-exiting' : ''}${fallback ? ' is-fallback' : ''}`} aria-label="一叶问茶首焦动画">
@@ -187,9 +212,9 @@ export function IntroExperience() {
 
       <footer className="intro-experience__footer">
         <div className="intro-experience__progress" aria-hidden="true"><i style={{ width: `${progress}%` }} /></div>
-        <button type="button" onClick={() => beginExit(elapsedRef.current >= READY_AT)} className={stage === 'ready' ? 'is-ready' : ''}>
+        <button type="button" onClick={handlePrimaryAction} disabled={primaryDisabled} className={stage === 'ready' ? 'is-ready' : ''}>
           <ChevronDown className="h-5 w-5" />
-          <span>{stage === 'ready' ? '进入数智茶鸣' : '向下探索'}</span>
+          <span>{primaryLabel}</span>
         </button>
       </footer>
     </main>
