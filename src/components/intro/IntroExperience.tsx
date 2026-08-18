@@ -24,6 +24,7 @@ export function IntroExperience() {
   const exitStarted = useRef(false);
   const exitTimeout = useRef<number>();
   const productionPreloaded = useRef(false);
+  const [engineReady, setEngineReady] = useState(Boolean(reducedMotion));
   const [stage, setStage] = useState<EngineStage>(reducedMotion ? 'ready' : 'loading');
   const [progress, setProgress] = useState(reducedMotion ? 1 : 0);
   const [leafReady, setLeafReady] = useState(Boolean(reducedMotion));
@@ -61,6 +62,7 @@ export function IntroExperience() {
       ) return;
 
       const { type, stage: nextStage, progress: nextProgress } = event.data;
+      if (type === 'ENGINE_READY') setEngineReady(true);
       if (type === 'STAGE_CHANGE' && nextStage) setStage(nextStage);
       if (type === 'PROGRESS' && typeof nextProgress === 'number') setProgress(nextProgress);
       if (type === 'LEAF_READY') setLeafReady(true);
@@ -79,6 +81,16 @@ export function IntroExperience() {
       sendToEngine('PAUSE');
     };
   }, [sendToEngine]);
+
+  useEffect(() => {
+    if (reducedMotion || engineReady || engineFailed) return;
+    const startupTimeout = window.setTimeout(() => {
+      setEngineFailed(true);
+      setStage('ready');
+      setProgress(1);
+    }, 12_000);
+    return () => window.clearTimeout(startupTimeout);
+  }, [engineFailed, engineReady, reducedMotion]);
 
   const beginExit = useCallback(() => {
     if (exitStarted.current) return;
