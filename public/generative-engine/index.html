@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>一叶问茶 · 生成引擎</title>
+    <style>
+      html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#03110c}canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}#engine-status,#engine-stage{position:fixed;z-index:2;left:18px;color:#dfe9df;font:600 11px/1.4 system-ui,"Microsoft YaHei",sans-serif;letter-spacing:.08em;pointer-events:none}#engine-status{bottom:18px;color:#91e8c7}#engine-stage{top:18px;padding:6px 8px;border:1px solid #c9a75f66;border-radius:5px;background:#061f16aa;color:#d9bd7c}
+    </style>
+    <script type="importmap">
+      {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/","gsap":"https://esm.sh/gsap@3.12.5"}}
+    </script>
+  </head>
+  <body>
+    <canvas id="art-canvas" aria-label="茶叶与茶山生成艺术画布"></canvas>
+    <div id="engine-stage">正在唤醒春山</div>
+    <div id="engine-status">正在建立 WebGL2 管线</div>
+    <script type="module" src="./engine.js"></script>
+  </body>
+</html>
