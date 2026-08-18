@@ -2308,6 +2308,7 @@ select {
 
 .intro-experience__visual,
 .intro-experience__visual canvas,
+.intro-experience__visual iframe,
 .intro-experience__visual > img {
   position: absolute !important;
   inset: 0;
@@ -2321,6 +2322,11 @@ select {
 }
 
 .intro-experience__visual canvas:active { cursor: grabbing; }
+
+.intro-experience__visual iframe {
+  border: 0;
+  background: #03110c;
+}
 
 .intro-experience__visual > img {
   object-fit: cover;
@@ -2592,9 +2598,10 @@ header nav > a > span { position: relative; z-index: 1; }
 
 @media (max-width: 767px) {
   .brand-title--loading,
-  .brand-title--intro { font-size: clamp(1.55rem, 8.4vw, 2.2rem); }
-  .intro-experience__header { align-items: flex-start; }
-  .intro-experience__skip { min-height: 2.2rem; padding: 0 0.65rem; font-size: 0.65rem; }
+  .brand-title--intro { font-size: clamp(1.3rem, 6.6vw, 1.7rem); }
+  .intro-experience__header { align-items: flex-start; gap: 0.5rem; }
+  .intro-experience__header .brand-title--intro { min-width: 0; }
+  .intro-experience__skip { flex: 0 0 2.45rem; min-height: 2.2rem; padding: 0 0.35rem; font-size: 0.62rem; }
   .intro-experience__copy { bottom: 7.4rem; }
   .intro-experience__copy h1 { font-size: clamp(2.45rem, 14vw, 4rem); }
   .intro-experience__footer { gap: 0.8rem; }
