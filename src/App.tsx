@@ -6,10 +6,14 @@ import { RouteTransition } from './components/layout/RouteTransition';
 import { ProductionPage } from './pages/ProductionPage';
 import { MarketPage } from './pages/MarketPage';
 import { MatchingPage } from './pages/MatchingPage';
+import { assetUrl } from './lib/assetUrl';
 
 const CARE_MODE_KEY = 'spring-tea-elder-care-mode';
 const IntroExperience = lazy(() =>
   import('./components/intro/IntroExperience').then(({ IntroExperience: Intro }) => ({ default: Intro })),
+);
+const StoryExperience = lazy(() =>
+  import('./components/story/StoryExperience').then(({ StoryExperience: Story }) => ({ default: Story })),
 );
 
 export default function App() {
@@ -26,12 +30,12 @@ export default function App() {
     window.localStorage.setItem(CARE_MODE_KEY, String(careMode));
   }, [careMode]);
 
-  const showIntro = location.pathname === '/' && !careMode;
+  const showImmersiveExperience = (location.pathname === '/' || location.pathname === '/story') && !careMode;
 
   return (
     <LayoutGroup id="tea-site-motion">
-      <div className={['min-h-screen bg-[#f7fbf3] text-tea-ink', careMode ? 'elder-care-mode' : '', showIntro ? 'intro-active' : ''].join(' ')}>
-        {!showIntro ? <TopNav careMode={careMode} onCareModeChange={setCareMode} /> : null}
+      <div className={['min-h-screen bg-[#f7fbf3] text-tea-ink', careMode ? 'elder-care-mode' : '', showImmersiveExperience ? 'intro-active' : ''].join(' ')}>
+        {!showImmersiveExperience ? <TopNav careMode={careMode} onCareModeChange={setCareMode} /> : null}
         <AnimatePresence mode="wait" initial={false}>
           <RouteTransition key={location.pathname}>
           <main>
@@ -43,6 +47,7 @@ export default function App() {
             ) : (
               <Routes location={location}>
                 <Route path="/" element={<Suspense fallback={<IntroLoading />}><IntroExperience /></Suspense>} />
+                <Route path="/story" element={<Suspense fallback={<IntroLoading />}><StoryExperience /></Suspense>} />
                 <Route path="/production" element={<ProductionPage onCareModeChange={setCareMode} />} />
                 <Route path="/market" element={<MarketPage />} />
                 <Route path="/matching" element={<MatchingPage />} />
@@ -62,7 +67,7 @@ function IntroLoading() {
     <div className="intro-loading-screen" aria-label="正在准备首焦动画">
       <img
         className="intro-loading-screen__mountain"
-        src="/assets/intro/intro-fallback.png"
+        src={assetUrl('/assets/intro/tea-mountain-hero.png')}
         alt=""
       />
       <div className="intro-loading-screen__shade" />

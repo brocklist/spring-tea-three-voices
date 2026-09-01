@@ -17,8 +17,9 @@ import {
   Wind,
   type LucideIcon,
 } from 'lucide-react';
+import { gsap } from 'gsap';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PestDetectionPanel } from '../components/production/PestDetectionPanel';
 import { SensorGauge } from '../components/production/SensorGauge';
@@ -38,6 +39,7 @@ import {
   formatLocationName,
   type WeatherLocation,
 } from '../lib/weather';
+import { assetUrl } from '../lib/assetUrl';
 import type { WeatherMetric } from '../types/domain';
 
 const ThreeTeaGardenScene = lazy(() =>
@@ -82,6 +84,8 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   const reducedMotion = useReducedMotion();
   const [fromIntro] = useState(() => Boolean((location.state as { fromIntro?: boolean } | null)?.fromIntro) && !careMode);
   const [introHandoffVisible, setIntroHandoffVisible] = useState(fromIntro);
+  const [dashboardReady, setDashboardReady] = useState(false);
+  const [dashboardEntranceComplete, setDashboardEntranceComplete] = useState(false);
   const [weatherLocation, setWeatherLocation] = useState<WeatherLocation>(defaultWeatherLocation);
   const [liveWeatherMetrics, setLiveWeatherMetrics] = useState<WeatherMetric[]>(weatherMetrics);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -91,6 +95,8 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   const [sceneResetToken, setSceneResetToken] = useState(0);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
   const handoffTimeout = useRef<number>();
+  const dashboardRoot = useRef<HTMLElement>(null);
+  const dashboardTimeline = useRef<gsap.core.Timeline>();
 
   useEffect(() => {
     let ignore = false;
@@ -129,8 +135,96 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   const completeIntroHandoff = useCallback(() => {
     if (!fromIntro) return;
     if (handoffTimeout.current) window.clearTimeout(handoffTimeout.current);
-    handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), reducedMotion ? 0 : 1_200);
+    handoffTimeout.current = window.setTimeout(() => setIntroHandoffVisible(false), reducedMotion ? 0 : 180);
   }, [fromIntro, reducedMotion]);
+
+  const handleSceneReady = useCallback(() => {
+    setDashboardReady(true);
+    completeIntroHandoff();
+  }, [completeIntroHandoff]);
+
+  useEffect(() => {
+    if (careMode || dashboardReady) return;
+    const fallbackTimer = window.setTimeout(handleSceneReady, 1_200);
+    return () => window.clearTimeout(fallbackTimer);
+  }, [careMode, dashboardReady, handleSceneReady]);
+
+  useLayoutEffect(() => {
+    if (careMode || !dashboardRoot.current) return;
+    const root = dashboardRoot.current;
+    const context = gsap.context(() => {
+      const panels = gsap.utils.toArray<HTMLElement>('[data-dashboard-entrance]')
+        .sort((a, b) => Number(a.dataset.dashboardEntrance) - Number(b.dataset.dashboardEntrance));
+      const mapPanel = root.querySelector<HTMLElement>('.command-map-panel');
+      const bootFx = root.querySelector<HTMLElement>('.command-map-panel__boot');
+      const energyPaths = gsap.utils.toArray<SVGPathElement>('.command-map-panel__energy path');
+
+      if (reducedMotion) {
+        gsap.set([mapPanel, ...panels], { clearProps: 'all' });
+        gsap.set(bootFx, { autoAlpha: 0 });
+        setDashboardEntranceComplete(true);
+        return;
+      }
+
+      gsap.set(mapPanel, { autoAlpha: 0.42, scale: 0.965, filter: 'blur(7px) brightness(.78)', clipPath: 'inset(3.5% 4.5% 3.5% 4.5% round 1rem)' });
+      gsap.set(bootFx, { autoAlpha: 0.38 });
+      gsap.set(energyPaths, { strokeDasharray: 560, strokeDashoffset: 560 });
+      panels.forEach((panel) => {
+        const fromLeft = Boolean(panel.closest('.command-column--left'));
+        const fromRight = Boolean(panel.closest('.command-column--right'));
+        gsap.set(panel, {
+          autoAlpha: 0,
+          x: fromLeft ? -28 : fromRight ? 28 : 0,
+          y: fromLeft || fromRight ? 6 : 22,
+          rotateY: fromLeft ? -4 : fromRight ? 4 : 0,
+          transformPerspective: 900,
+          filter: 'blur(7px) brightness(.75)',
+        });
+      });
+
+      const timeline = gsap.timeline({
+        paused: true,
+        defaults: { ease: 'power3.out' },
+        onStart: () => root.classList.add('is-dashboard-entering'),
+        onComplete: () => {
+          root.classList.remove('is-dashboard-entering');
+          root.classList.add('is-dashboard-online');
+          gsap.set([mapPanel, ...panels], { clearProps: 'transform,opacity,visibility,filter,clipPath' });
+          gsap.set(bootFx, { autoAlpha: 0 });
+          setDashboardEntranceComplete(true);
+        },
+      });
+
+      timeline
+        .to(bootFx, { autoAlpha: 1, duration: 0.28, ease: 'power1.out' }, 0)
+        .to(mapPanel, { autoAlpha: 1, scale: 1, filter: 'blur(0px) brightness(1)', clipPath: 'inset(0% 0% 0% 0% round .9rem)', duration: 0.8 }, 0.25)
+        .to(energyPaths, { strokeDashoffset: 0, duration: 0.72, stagger: 0.08, ease: 'power2.inOut' }, 0.34)
+        .call(() => {
+          const markers = root.querySelectorAll('.scene-zone-marker');
+          gsap.fromTo(markers, { autoAlpha: 0, scale: 0.45 }, { autoAlpha: 1, scale: 1, duration: 0.42, stagger: 0.08, ease: 'back.out(1.7)', clearProps: 'transform,opacity,visibility' });
+        }, [], 0.66);
+
+      const panelStarts = [0.7, 0.78, 0.92, 1.05, 1.18, 1.28, 1.45, 1.6];
+      panels.forEach((panel, index) => {
+        timeline.to(panel, { autoAlpha: 1, x: 0, y: 0, rotateY: 0, filter: 'blur(0px) brightness(1)', duration: 0.55 }, panelStarts[index] ?? 1.6);
+        timeline.fromTo(panel.querySelector('.command-panel__header'), { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.32 }, (panelStarts[index] ?? 1.6) + 0.13);
+        timeline.fromTo(panel.querySelector('.command-panel__body'), { autoAlpha: 0, y: 7 }, { autoAlpha: 1, y: 0, duration: 0.38 }, (panelStarts[index] ?? 1.6) + 0.2);
+      });
+      timeline.to(bootFx, { autoAlpha: 0, duration: 0.55, ease: 'power2.out' }, 1.82);
+      dashboardTimeline.current = timeline;
+    }, root);
+
+    return () => {
+      dashboardTimeline.current?.kill();
+      dashboardTimeline.current = undefined;
+      context.revert();
+    };
+  }, [careMode, reducedMotion]);
+
+  useEffect(() => {
+    if (!dashboardReady || dashboardEntranceComplete) return;
+    dashboardTimeline.current?.play(0);
+  }, [dashboardEntranceComplete, dashboardReady]);
 
   useEffect(() => {
     if (!fromIntro) return;
@@ -172,10 +266,10 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   }
 
   return (
-    <main className="production-dashboard production-command">
+    <main ref={dashboardRoot} className={`production-dashboard production-command${dashboardEntranceComplete ? ' is-dashboard-online' : ''}`}>
       <div className="command-grid">
         <aside className="command-column command-column--left">
-          <DashboardPanel number="01" title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun} priority="primary" tone="gold" variant="weather">
+          <DashboardPanel number="01" entranceOrder={1} title="实时茶园天气查询" subtitle="春建乡 · 富阳 · 杭州" icon={CloudSun} priority="primary" tone="gold" variant="weather">
             <WeatherLocationSelector compact location={weatherLocation} loading={weatherLoading} error={weatherError} onChange={setWeatherLocation} />
             <div className="command-weather-summary">
               <div className="command-weather-summary__condition">
@@ -194,7 +288,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="02" title="今日茶园生产态势" icon={Activity} variant="status">
+          <DashboardPanel number="02" entranceOrder={4} title="今日茶园生产态势" icon={Activity} variant="status">
             <div className="command-status-grid">
               <StatusTile label="今日作业窗口" value="适宜采摘" icon={Leaf} />
               <StatusTile label="重点巡护片区" value="东坡低洼区" icon={MapPin} tone="orange" />
@@ -202,7 +296,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="03" title="老年关怀模式" icon={HeartHandshake} variant="care">
+          <DashboardPanel number="03" entranceOrder={5} title="老年关怀模式" icon={HeartHandshake} variant="care">
             <button type="button" className="command-care-toggle" onClick={() => onCareModeChange?.(true)}>
               <span className="command-care-toggle__icon"><HeartHandshake className="h-5 w-5" /></span>
               <span><strong>一键开启</strong><small>放大字体、简化信息、保留关键提醒</small></span>
@@ -224,9 +318,20 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
                 focusedZoneId={focusedZoneId}
                 resetToken={sceneResetToken}
                 onZoneSelect={selectZone}
-                onSceneReady={completeIntroHandoff}
+                onSceneReady={handleSceneReady}
               />
             </Suspense>
+          </div>
+          <div className="command-map-panel__boot" aria-hidden="true">
+            <div className="command-map-panel__boot-grid" />
+            <i className="command-map-panel__corner command-map-panel__corner--tl" />
+            <i className="command-map-panel__corner command-map-panel__corner--tr" />
+            <i className="command-map-panel__corner command-map-panel__corner--bl" />
+            <i className="command-map-panel__corner command-map-panel__corner--br" />
+            <svg className="command-map-panel__energy" viewBox="0 0 1000 600" preserveAspectRatio="none">
+              <path d="M-30 460 C150 370 245 430 405 315 S690 205 1030 120" />
+              <path d="M-20 520 C185 445 310 485 478 370 S760 275 1020 235" />
+            </svg>
           </div>
           <div className="command-map-panel__veil" />
           <div className="command-map-panel__footer">
@@ -236,13 +341,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         </section>
 
         <aside className="command-column command-column--right">
-          <DashboardPanel number="04" title="茶园环境监测驾驶舱" icon={Waves} priority="primary" tone="ivory" variant="environment">
+          <DashboardPanel number="04" entranceOrder={2} title="茶园环境监测驾驶舱" icon={Waves} priority="primary" tone="ivory" variant="environment">
             <div className="command-gauge-grid">
               {sensorMetrics.map((metric) => <SensorGauge key={metric.id} metric={metric} variant="dashboard" />)}
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="05" title="智能农事建议" icon={Sprout} priority="primary" tone="orange" variant="advice">
+          <DashboardPanel number="05" entranceOrder={3} title="智能农事建议" icon={Sprout} priority="primary" tone="orange" variant="advice">
             <div className="command-advice-list">
               {operationAdvice.map((item) => {
                 const Icon = item.icon;
@@ -257,13 +362,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             </div>
           </DashboardPanel>
 
-          <DashboardPanel number="06" title="茶叶病虫害图片识别" icon={AlertTriangle} tone="orange" variant="pest">
+          <DashboardPanel number="06" entranceOrder={6} title="茶叶病虫害图片识别" icon={AlertTriangle} tone="orange" variant="pest">
             <PestDetectionPanel variant="dashboard" />
           </DashboardPanel>
         </aside>
 
         <section className="command-bottom command-bottom--knowledge">
-          <DashboardPanel number="07" title="农业知识辅助" icon={BookOpenCheck} tone="ivory" variant="knowledge">
+          <DashboardPanel number="07" entranceOrder={7} title="农业知识辅助" icon={BookOpenCheck} tone="ivory" variant="knowledge">
             <div className="command-knowledge-layout">
               <div className="command-article-strip">
                 {knowledgeArticles.map((article) => (
@@ -286,7 +391,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         </section>
 
         <section className="command-bottom command-bottom--overview">
-          <DashboardPanel number="08" title="平台总览" subtitle="演示数据" icon={ShieldCheck} tone="gold" variant="overview">
+          <DashboardPanel number="08" entranceOrder={8} title="平台总览" subtitle="演示数据" icon={ShieldCheck} tone="gold" variant="overview">
             <div className="command-audience-list">
               <span>茶农</span><i>›</i><span>茶企</span><i>›</i><span>消费者</span><i>›</i><span>高校学生团队</span>
             </div>
@@ -308,7 +413,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
             transition={{ duration: reducedMotion ? 0.1 : 0.58, ease: [0.22, 1, 0.36, 1] }}
             aria-hidden="true"
           >
-            <img src="/assets/intro/intro-fallback.png" alt="" />
+            <img src={assetUrl('/assets/intro/tea-mountain-hero.png')} alt="" />
             <span>正在进入春建茶园</span>
           </motion.div>
         ) : null}
@@ -319,6 +424,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
 
 function DashboardPanel({
   number,
+  entranceOrder,
   title,
   subtitle,
   icon: Icon,
@@ -328,6 +434,7 @@ function DashboardPanel({
   variant,
 }: {
   number: string;
+  entranceOrder?: number;
   title: string;
   subtitle?: string;
   icon: LucideIcon;
@@ -337,7 +444,7 @@ function DashboardPanel({
   variant?: 'weather' | 'status' | 'care' | 'environment' | 'advice' | 'pest' | 'knowledge' | 'overview';
 }) {
   return (
-    <section className={`command-panel command-panel--${priority} command-panel--${tone}${variant ? ` command-panel--${variant}` : ''}`}>
+    <section data-dashboard-entrance={entranceOrder} className={`command-panel command-panel--${priority} command-panel--${tone}${variant ? ` command-panel--${variant}` : ''}`}>
       <header className="command-panel__header">
         <span className="command-panel__number">{number}</span>
         <Icon className="h-4 w-4" />
@@ -382,7 +489,7 @@ function PlatformStat({ label, value }: { label: string; value: string }) {
 function MapLoadingFallback() {
   return (
     <div className="command-map-loading">
-      <img src="/assets/production/chunjian-digital-twin-map-v1.png" alt="春建乡茶园数字孪生地图加载中" />
+      <img src={assetUrl('/assets/production/chunjian-digital-twin-map-v1.png')} alt="春建乡茶园数字孪生地图加载中" />
       <span>正在构建茶园数字孪生地图</span>
     </div>
   );

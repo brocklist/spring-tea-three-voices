@@ -10,6 +10,7 @@ import type {
   TeaProduct,
   WeatherMetric,
 } from '../types/domain';
+import { assetUrl } from '../lib/assetUrl';
 
 export const heroAssets = {
   production:
@@ -125,7 +126,7 @@ export const mockDetectionResult: PestDetectionResult = {
 
 export const leafDetectionDemos: PestDetectionResult[] = [
   {
-    imageUrl: '/assets/leaf-demos/anthracnose-photo.png',
+    imageUrl: assetUrl('/assets/leaf-demos/anthracnose-photo.png'),
     pestType: '茶炭疽病疑似样本',
     confidence: 88,
     severity: '中等风险',
@@ -135,7 +136,7 @@ export const leafDetectionDemos: PestDetectionResult[] = [
     analysisPoints: ['褐斑集中在叶缘和叶尖', '病斑形状不规则', '高湿天气后需要加密巡园'],
   },
   {
-    imageUrl: '/assets/leaf-demos/leafhopper-photo.jpg',
+    imageUrl: assetUrl('/assets/leaf-demos/leafhopper-photo.jpg'),
     pestType: '茶小绿叶蝉危害疑似样本',
     confidence: 82,
     severity: '轻中度风险',
@@ -145,7 +146,7 @@ export const leafDetectionDemos: PestDetectionResult[] = [
     analysisPoints: ['叶面有点状失绿', '嫩梢边缘轻微卷曲', '应检查叶背是否有活动虫体'],
   },
   {
-    imageUrl: '/assets/leaf-demos/healthy-leaf-photo.jpg',
+    imageUrl: assetUrl('/assets/leaf-demos/healthy-leaf-photo.jpg'),
     pestType: '健康嫩叶样本',
     confidence: 94,
     severity: '低风险',
@@ -232,7 +233,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'lychee-longjing-cider',
     name: '荔枝龙井西打酒',
     grade: '2025 旅游商品铜奖',
-    imageUrl: '/assets/products/lychee-longjing-cider.webp',
+    imageUrl: assetUrl('/assets/products/lychee-longjing-cider.webp'),
     intro:
       '融合荔枝与龙井：荔枝的甜对应郁达夫笔下柔情，龙井的清冽代表文人风骨，气泡如同友人谈笑时光。',
     spec: '文创饮品 / 果香气泡 / 微醺茶酒',
@@ -244,7 +245,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'xiaoguan-tea-gift-box',
     name: '小罐茶礼盒',
     grade: '达夫的朋友们 IP 系列',
-    imageUrl: '/assets/products/xiaoguan-tea-gift-box.webp',
+    imageUrl: assetUrl('/assets/products/xiaoguan-tea-gift-box.webp'),
     intro:
       '采用创新理念整合国内茶行业优质资源，坚持原产地原料、大师工艺、大师监制，并以小罐保鲜技术呈现茶礼质感。',
     spec: '茶礼盒 / 小罐保鲜 / 大师监制',
@@ -256,7 +257,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'osmanthus-longjing-tea',
     name: '桂花龙井茶叶',
     grade: '杭州双物产融合',
-    imageUrl: '/assets/products/osmanthus-longjing-tea.webp',
+    imageUrl: assetUrl('/assets/products/osmanthus-longjing-tea.webp'),
     intro:
       '融合杭州金桂与龙井，桂花香甜包裹龙井鲜醇，花香与茶韵相融，带来穿越古今的味觉体验。',
     spec: '桂花龙井 / 花香茶韵 / 茶叶产品',
@@ -268,7 +269,7 @@ export const teaProducts: TeaProduct[] = [
     id: 'longjing-steam-eye-mask',
     name: '龙井茶香蒸汽热敷眼罩',
     grade: '茶旅融合生活文创',
-    imageUrl: '/assets/products/longjing-steam-eye-mask.webp',
+    imageUrl: assetUrl('/assets/products/longjing-steam-eye-mask.webp'),
     intro:
       '把龙井茶天然精粹融入日用产品，以温润蒸汽缓解眼部疲劳，茶香安神舒缓，延展富春山水与茶文化氛围。',
     spec: '蒸汽热敷 / 龙井茶香 / 日用文创',
@@ -284,7 +285,7 @@ export const mediaAssets: MediaAsset[] = [
     type: 'video',
     title: '茶园航拍影像',
     coverUrl: 'https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=1200&q=82',
-    url: '/assets/placeholders/chunjian-drone.mp4',
+    url: assetUrl('/assets/placeholders/chunjian-drone.mp4'),
     description: '呈现春建乡茶园航拍、晨雾与采茶队伍等影像素材。',
   },
   {
@@ -292,7 +293,7 @@ export const mediaAssets: MediaAsset[] = [
     type: 'image',
     title: '手工制茶图文',
     coverUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=82',
-    url: '/assets/placeholders/tea-craft.jpg',
+    url: assetUrl('/assets/placeholders/tea-craft.jpg'),
     description: '展示摊青、杀青、揉捻、干燥等工序，可替换为真实素材。',
   },
   {
@@ -300,7 +301,7 @@ export const mediaAssets: MediaAsset[] = [
     type: 'image',
     title: '茶文化传播素材',
     coverUrl: 'https://images.unsplash.com/photo-1523920290228-4f321a939b4c?auto=format&fit=crop&w=1200&q=82',
-    url: '/assets/placeholders/tea-culture.jpg',
+    url: assetUrl('/assets/placeholders/tea-culture.jpg'),
     description: '串联品牌故事、节庆活动、非遗体验和茶席影像。',
   },
 ];

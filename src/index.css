@@ -1879,6 +1879,63 @@ select {
 
 .command-map-panel__scene { z-index: 0; }
 
+.command-map-panel__boot {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 48%, rgba(98, 221, 176, 0.08), transparent 48%);
+}
+
+.command-map-panel__boot-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.32;
+  background-image:
+    linear-gradient(rgba(145, 232, 199, 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(145, 232, 199, 0.13) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(ellipse at center, black 8%, rgba(0, 0, 0, 0.72) 48%, transparent 86%);
+}
+
+.command-map-panel__corner {
+  position: absolute;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-color: rgba(201, 167, 95, 0.7);
+  filter: drop-shadow(0 0 5px rgba(201, 167, 95, 0.24));
+}
+
+.command-map-panel__corner--tl { top: 0.9rem; left: 0.9rem; border-top: 1px solid; border-left: 1px solid; }
+.command-map-panel__corner--tr { top: 0.9rem; right: 0.9rem; border-top: 1px solid; border-right: 1px solid; }
+.command-map-panel__corner--bl { bottom: 0.9rem; left: 0.9rem; border-bottom: 1px solid; border-left: 1px solid; }
+.command-map-panel__corner--br { right: 0.9rem; bottom: 0.9rem; border-right: 1px solid; border-bottom: 1px solid; }
+
+.command-map-panel__energy {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.58;
+  filter: drop-shadow(0 0 4px rgba(98, 221, 176, 0.26));
+}
+
+.command-map-panel__energy path {
+  fill: none;
+  stroke: rgba(145, 232, 199, 0.58);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.production-command.is-dashboard-entering::before {
+  opacity: 0.2;
+}
+
+.production-command.is-dashboard-online .command-map-panel--primary {
+  box-shadow: inset 0 1px 0 rgba(233, 236, 227, 0.11), inset 0 0 56px rgba(201, 167, 95, 0.045), 0 18px 42px rgba(0, 0, 0, 0.3);
+}
+
 .command-map-panel__veil {
   z-index: 1;
   pointer-events: none;
@@ -2512,6 +2569,11 @@ select {
   transition: opacity 420ms ease, transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.intro-experience.is-exiting .intro-experience__visual {
+  opacity: 0;
+  transition: opacity 620ms ease 40ms;
+}
+
 .production-intro-handoff {
   position: fixed;
   z-index: 90;
@@ -2624,4 +2686,5 @@ header nav > a > span { position: relative; z-index: 1; }
   .command-map-panel,
   .command-article-card,
   .command-status-tile { transition: none; }
+  .command-map-panel__boot { display: none; }
 }

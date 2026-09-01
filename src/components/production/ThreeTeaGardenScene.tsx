@@ -4,9 +4,10 @@ import { Component, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, 
 import { BufferGeometry, Color, DoubleSide, Float32BufferAttribute, PerspectiveCamera, PlaneGeometry, SRGBColorSpace, Vector3 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import type { CameraPose, TeaGardenZone } from '../../types/domain';
+import { assetUrl } from '../../lib/assetUrl';
 
-const mapAsset = '/assets/production/chunjian-digital-twin-map-v2.png';
-const terrainCloudAsset = '/assets/production/terrain-edge-cloud.png';
+const mapAsset = assetUrl('/assets/production/chunjian-digital-twin-map-v2.png');
+const terrainCloudAsset = assetUrl('/assets/production/terrain-edge-cloud.png');
 const terrainSize = { width: 20, depth: 11.25 };
 const townshipBoundary: Array<[number, number]> = [
   [-8.75, -3.4], [-6.95, -4.55], [-3.25, -4.92], [0.65, -4.82], [4.65, -4.32], [8.35, -2.3],
