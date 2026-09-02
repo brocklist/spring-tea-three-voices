@@ -40,7 +40,7 @@
 .story-experience__header button:hover, .story-experience__header button:focus-visible { color: var(--story-ivory); outline: none; }
 
 .story-visual--production { background: radial-gradient(circle at 66% 50%, rgba(121, 213, 173, 0.14), transparent 42%); }
-.story-visual__map { position: absolute; top: 37%; right: clamp(-1rem, 3vw, 3rem); width: min(67vw, 64rem); border: 1px solid rgba(121, 213, 173, 0.28); border-radius: 1.35rem; filter: brightness(0.8) saturate(0.9); box-shadow: 0 28px 100px rgba(0, 0, 0, 0.44); transform: translateY(-45%) perspective(1100px) rotateY(-9deg) rotateX(3deg); }
+.story-visual__map { position: absolute; top: 31%; right: clamp(2rem, 8vw, 7rem); width: min(67vw, 64rem); border: 1px solid rgba(121, 213, 173, 0.28); border-radius: 1.35rem; filter: brightness(0.8) saturate(0.9); box-shadow: 0 28px 100px rgba(0, 0, 0, 0.44); transform: translateY(-45%) perspective(1100px) rotateY(-9deg) rotateX(3deg); }
 .story-product-orbit { position: absolute; top: 50%; right: -11%; width: min(67vw, 68rem); height: min(47vw, 43rem); border: 1px solid rgba(216, 181, 106, 0.28); border-radius: 50%; box-shadow: inset 0 0 58px rgba(216, 181, 106, 0.06); transform: translateY(-50%) rotate(-11deg); }
 .story-product { position: absolute; width: clamp(8rem, 13vw, 13rem); aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid rgba(242, 238, 228, 0.22); border-radius: 0.8rem; box-shadow: 0 24px 42px rgba(0, 0, 0, 0.3); }
 .story-product--0 { top: 24%; right: 37%; }
