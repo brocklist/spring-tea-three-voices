@@ -1,42 +1,56 @@
-import { Link2, MapPin, Sparkles } from 'lucide-react';
-import type { MatchResult } from '../../types/domain';
-
-interface MatchResultCardProps {
-  result: MatchResult;
-}
-
-export function MatchResultCard({ result }: MatchResultCardProps) {
+import { ArrowRight, MapPin } from "lucide-react";
+import type { MatchResult } from "../../types/domain";
+export function MatchResultCard({ result }: { result: MatchResult }) {
   return (
-    <article className="tea-card rounded-3xl p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-tea-spring/18 px-3 py-1 text-xs font-black text-tea-leaf">
-            <Sparkles className="h-3.5 w-3.5" />
-            匹配分 {result.score}
-          </div>
-          <h3 className="mt-4 text-xl font-black text-tea-ink">{result.project.projectName}</h3>
-          <p className="mt-1 text-sm font-bold text-tea-ink/56">推荐茶园：{result.garden.gardenName}</p>
-        </div>
-        <div className="rounded-2xl bg-tea-mist px-4 py-3 text-sm font-bold text-tea-ink/64">
-          <MapPin className="mr-1 inline h-4 w-4 text-tea-leaf" />
+    <article className="match-card">
+      <header>
+        <span className="match-score">
+          {result.score}
+          <small>匹配分</small>
+        </span>
+        <span>
+          <MapPin size={15} />
           {result.garden.location}
+        </span>
+      </header>
+      <div className="match-pair">
+        <div>
+          <small>青年项目</small>
+          <h2>{result.project.projectName}</h2>
+        </div>
+        <ArrowRight aria-hidden="true" />
+        <div>
+          <small>合作茶园</small>
+          <h2>{result.garden.gardenName}</h2>
         </div>
       </div>
-      <p className="mt-5 text-sm leading-6 text-tea-ink/68">{result.reason}</p>
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="resource-tags">
         {result.matchedTags.map((tag) => (
-          <span key={tag} className="rounded-full bg-tea-ink px-3 py-1 text-xs font-bold text-white">
-            {tag}
-          </span>
+          <span key={tag}>{tag}</span>
         ))}
       </div>
-      <div className="tea-footer mt-5 grid gap-3 rounded-2xl p-4 text-sm leading-6 text-tea-ink/66 sm:grid-cols-2">
-        <p>
-          <Link2 className="mr-2 inline h-4 w-4 text-tea-leaf" />
-          项目需求：{result.project.requiredResources}
-        </p>
-        <p>茶园资源：{result.garden.resources}</p>
-      </div>
+      <p>{result.reason}</p>
+      <p className="match-terms">
+        <strong>合作条件</strong>{" "}
+        {result.garden.cooperationTerms || "双方进一步沟通"}
+      </p>
+      <details>
+        <summary>展开合作详情</summary>
+        <dl>
+          <dt>团队介绍</dt>
+          <dd>{result.project.teamIntro || "待补充"}</dd>
+          <dt>项目需求</dt>
+          <dd>{result.project.requiredResources || "待沟通"}</dd>
+          <dt>茶园资源</dt>
+          <dd>{result.garden.resources || "待沟通"}</dd>
+          <dt>合作方式</dt>
+          <dd>{result.project.cooperationMode || "待沟通"}</dd>
+          <dt>团队联系</dt>
+          <dd>{result.project.contact || "暂未填写"}</dd>
+          <dt>茶园联系</dt>
+          <dd>{result.garden.contact || "暂未填写"}</dd>
+        </dl>
+      </details>
     </article>
   );
 }

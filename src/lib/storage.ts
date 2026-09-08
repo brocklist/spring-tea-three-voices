@@ -11,14 +11,16 @@ export function readStorage<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeStorage<T>(key: string, value: T): void {
+export function writeStorage<T>(key: string, value: T): boolean {
   if (typeof window === 'undefined') {
-    return;
+    return false;
   }
 
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
-    // LocalStorage can be disabled or full; keep the page usable with in-memory state.
+    // Keep the page usable while allowing callers to report persistence failure.
+    return false;
   }
 }
