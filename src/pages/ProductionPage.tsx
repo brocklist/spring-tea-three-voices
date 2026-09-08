@@ -94,6 +94,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
   const [focusedZoneId, setFocusedZoneId] = useState<string>();
   const [sceneResetToken, setSceneResetToken] = useState(0);
   const lastSuccessfulWeatherLocation = useRef(defaultWeatherLocation);
+  const hasSuccessfulWeather = useRef(false);
   const handoffTimeout = useRef<number>();
   const dashboardRoot = useRef<HTMLElement>(null);
   const dashboardTimeline = useRef<gsap.core.Timeline>();
@@ -109,12 +110,13 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         const dashboard = await fetchWeatherDashboard(weatherLocation);
         if (!ignore) {
           setLiveWeatherMetrics(dashboard.metrics);
+          hasSuccessfulWeather.current = true;
           lastSuccessfulWeatherLocation.current = weatherLocation;
         }
       } catch {
         if (!ignore) {
           const fallbackLocation = lastSuccessfulWeatherLocation.current;
-          setWeatherError(`实时天气暂时不可用，已恢复至${formatLocationName(fallbackLocation)}的最近一次数据。`);
+          setWeatherError(hasSuccessfulWeather.current ? `实时天气暂时不可用，已恢复至${formatLocationName(fallbackLocation)}的最近一次数据。` : '实时天气暂时不可用，当前显示演示天气数据。');
           setWeatherLocation((currentLocation) => currentLocation.id === weatherLocation.id ? fallbackLocation : currentLocation);
         }
       } finally {
@@ -200,8 +202,8 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         .to(mapPanel, { autoAlpha: 1, scale: 1, filter: 'blur(0px) brightness(1)', clipPath: 'inset(0% 0% 0% 0% round .9rem)', duration: 0.8 }, 0.25)
         .to(energyPaths, { strokeDashoffset: 0, duration: 0.72, stagger: 0.08, ease: 'power2.inOut' }, 0.34)
         .call(() => {
-          const markers = root.querySelectorAll('.scene-zone-marker');
-          gsap.fromTo(markers, { autoAlpha: 0, scale: 0.45 }, { autoAlpha: 1, scale: 1, duration: 0.42, stagger: 0.08, ease: 'back.out(1.7)', clearProps: 'transform,opacity,visibility' });
+          const markers = root.querySelectorAll('.terrain-pin');
+          if (markers.length) gsap.fromTo(markers, { autoAlpha: 0, scale: 0.45 }, { autoAlpha: 1, scale: 1, duration: 0.42, stagger: 0.08, ease: 'back.out(1.7)', clearProps: 'transform,opacity,visibility' });
         }, [], 0.66);
 
       const panelStarts = [0.7, 0.78, 0.92, 1.05, 1.18, 1.28, 1.45, 1.6];
@@ -335,7 +337,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
           </div>
           <div className="command-map-panel__veil" />
           <div className="command-map-panel__footer">
-            <span><i /> 实时点位在线</span>
+            <span><i /> 三维示意沙盘</span>
             <span>拖动旋转地图，点击数据卡片查看片区状态</span>
           </div>
         </section>
@@ -489,7 +491,7 @@ function PlatformStat({ label, value }: { label: string; value: string }) {
 function MapLoadingFallback() {
   return (
     <div className="command-map-loading">
-      <img src={assetUrl('/assets/production/chunjian-digital-twin-map-v1.png')} alt="春建乡茶园数字孪生地图加载中" />
+      <img src={assetUrl('/assets/production/chunjian-tea-terrain-v3.png')} alt="春建乡茶园数字孪生地图加载中" />
       <span>正在构建茶园数字孪生地图</span>
     </div>
   );
@@ -546,7 +548,7 @@ function ElderCareProductionPage({
       <section className="section-shell pb-14">
         <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="tea-card rounded-[2rem] p-7">
-            <h2 className="text-4xl font-black text-tea-ink">今日种植提醒</h2>
+            <h2 className="text-4xl font-black text-tea-ink">种植提醒（演示）</h2>
             <div className="mt-6 grid gap-4">
               {elderPlantingTips.map((tip) => (
                 <div key={tip.title} className="tea-footer rounded-3xl p-5">
@@ -558,7 +560,7 @@ function ElderCareProductionPage({
           </article>
 
           <article className="tech-panel rounded-[2rem] p-7">
-            <h2 className="text-4xl font-black text-white">茶园环境</h2>
+            <h2 className="text-4xl font-black text-white">茶园环境（演示数据）</h2>
             <p className="mt-4 text-2xl font-semibold leading-relaxed text-white/76">下面几个数字用于判断茶树是否舒适。保持土壤微酸、湿度适中、光照不过强，春梢长势会更稳定。</p>
             <div className="mt-7 grid gap-4 sm:grid-cols-2">
               {sensorMetrics.slice(0, 4).map((metric) => (
