@@ -31,10 +31,15 @@ export default function App() {
   }, [careMode]);
 
   const showImmersiveExperience = (location.pathname === '/' || location.pathname === '/story') && !careMode;
+  const workspaceTheme = location.pathname === '/market'
+    ? 'site-theme-market'
+    : location.pathname === '/matching'
+      ? 'site-theme-matching'
+      : '';
 
   return (
     <LayoutGroup id="tea-site-motion">
-      <div className={['min-h-screen bg-[#f7fbf3] text-tea-ink', careMode ? 'elder-care-mode' : '', showImmersiveExperience ? 'intro-active' : ''].join(' ')}>
+      <div className={['min-h-screen bg-[#f7fbf3] text-tea-ink', careMode ? 'elder-care-mode' : workspaceTheme, showImmersiveExperience ? 'intro-active' : ''].join(' ')}>
         {!showImmersiveExperience ? <TopNav careMode={careMode} onCareModeChange={setCareMode} /> : null}
         <AnimatePresence mode="wait" initial={false}>
           <RouteTransition key={location.pathname}>
