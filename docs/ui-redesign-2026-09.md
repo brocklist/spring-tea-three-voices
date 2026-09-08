@@ -39,3 +39,27 @@ Constraints: Fictional schematic inspired by tea country, not factual GIS. No UI
 ```
 
 山体高度为程序化示意数据，不代表春建乡真实测绘地形。
+
+
+## 9 月 8 日原始实体茶山修订
+
+用户否定简化山体后，对照原地图 v1/v2、首焦图和原始 FBX，最终改用 assets-source/intro/tea-mountain.fbx 的实体几何。转换脚本 scripts/build-production-mountain.mjs 保留 181,360 三角面，合并顶点后 90,682 顶点，生产资源约 4.62 MB。新增表面种植材质及实例化细叶；地点从实际三角面射线采样高度。原始 FBX、首焦和粒子引擎工作未修改。
+
+恢复原版地点按钮与四指标信息卡，扩大地图。真实浏览器检查桌面总览、旋转、片区聚焦、重置、320/390 窄屏与 WebGL 降级；独立 review 发现的窄屏镜头持续渲染、降级卡片裁切已修复。减少动态效果下禁用选中卡片入场动画。类型检查及生产构建通过。Sites 原绑定查询仍为 project_not_found，线上未更新。
+
+重新生成的 chunjian-landscape-v4.png 为降级示意插图，不参与三维网格变形，也不代表原 FBX 的精确投影。最终模型属于示意茶山，没有真实 GIS 测绘精度。
+
+本次生成提示词：
+```text
+Use case: stylized-concept.
+Asset type: refined high-detail landscape reference and fallback illustration.
+Primary request: Create ONE wide 16:9 image of a substantially detailed, realistic 3D architectural landscape maquette of a Chinese tea mountain valley.
+Scene/backdrop: dark forest-green seamless studio backdrop; the ENTIRE organic landscape diorama is visible, with a shallow natural earth cross-section around its organically shaped perimeter. No rectangular photograph sheet or rectangular slab.
+Subject: six asymmetrical, gently rolling ridges, progressively taller at the rear, framing a coherent central valley. Build ACTUAL broad horizontal terrace benches cut into the slopes, with readable horizontal flat planting surfaces and modest vertical earthen risers; dense, neatly spaced tea hedgerows follow the terrace contours. Show many crisp individual bushes with fresh small tea-leaf textures. Narrow warm tan paths continuously connect terraces and village without abrupt breaks.
+Valley: a clear narrow natural creek runs from rear center toward front center, following the low ground. A small rural village occupies the lower-center/right valley: white plaster buildings, dark gray gabled tiled roofs, small paved yards, level foundations. A short wooden footbridge crosses the creek and connects the paths. Clusters of mature leafy trees line perimeter ridges.
+Style/medium: premium realistic 3D landscape maquette, refined architectural visualization, natural physical materials and crisp fine details, credible coherent terrain at a consistent scale.
+Composition/framing: elevated near-orthographic camera looking down approximately 45 degrees; wide 16:9 framing; all landscape edges fully in view with modest backdrop margin; rear ridges visibly taller but rounded, foreground open enough to clearly see creek, bridge, village and terraces.
+Lighting/mood: warm natural daylight, soft contact shadows, rich fresh natural greens, inviting realism.
+Materials/textures: realistic leafy tea hedges, warm packed-earth paths, subtle exposed soil and stone on terrace risers, water reflections, individual roof tiles, white plaster with fine texture, wood footbridge.
+Constraints: level building foundations, continuous traversable paths, creek follows the valley; shallow earth section; no steep spikes or sheer mountain cones; no text, no labels, no markers, no UI, no symbols, no logos, no watermarks. This is a standalone illustration, not a texture map.
+```

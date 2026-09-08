@@ -202,7 +202,7 @@ export function ProductionPage({ careMode = false, onCareModeChange }: Productio
         .to(mapPanel, { autoAlpha: 1, scale: 1, filter: 'blur(0px) brightness(1)', clipPath: 'inset(0% 0% 0% 0% round .9rem)', duration: 0.8 }, 0.25)
         .to(energyPaths, { strokeDashoffset: 0, duration: 0.72, stagger: 0.08, ease: 'power2.inOut' }, 0.34)
         .call(() => {
-          const markers = root.querySelectorAll('.terrain-pin');
+          const markers = root.querySelectorAll('.scene-zone-marker');
           if (markers.length) gsap.fromTo(markers, { autoAlpha: 0, scale: 0.45 }, { autoAlpha: 1, scale: 1, duration: 0.42, stagger: 0.08, ease: 'back.out(1.7)', clearProps: 'transform,opacity,visibility' });
         }, [], 0.66);
 
@@ -491,7 +491,7 @@ function PlatformStat({ label, value }: { label: string; value: string }) {
 function MapLoadingFallback() {
   return (
     <div className="command-map-loading">
-      <img src={assetUrl('/assets/production/chunjian-tea-terrain-v3.png')} alt="春建乡茶园数字孪生地图加载中" />
+      <img src={assetUrl('/assets/production/chunjian-landscape-v4.png')} alt="春建乡茶园数字孪生地图加载中" />
       <span>正在构建茶园数字孪生地图</span>
     </div>
   );

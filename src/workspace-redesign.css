@@ -99,34 +99,6 @@
     opacity: 1;
   }
 }
-.terrain-pin {
-  white-space: nowrap;
-  font-size: 12px;
-  border: 1px solid #8cae82;
-  border-radius: 5px;
-  background: #10291fe8;
-  color: #edf4df;
-  padding: 7px 10px;
-  box-shadow: 0 4px 12px #0004;
-}
-.terrain-pin i {
-  display: inline-block;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #badd94;
-  margin-right: 6px;
-}
-.terrain-pin.is-selected {
-  background: #d3eda2;
-  color: #183120;
-  border-color: #d3eda2;
-  font-weight: 700;
-}
-.terrain-pin.is-selected i {
-  background: #42632e;
-}
-
 /* Editorial */
 .market-editorial {
   --red: #a33d2a;
@@ -1082,23 +1054,29 @@
   background: #edf2e6;
   font-size: 14px;
 }
-.terrain-pin-detail {
-  display: grid;
-  gap: 5px;
-  margin-top: 7px;
-  padding-top: 7px;
-  border-top: 1px solid #52783a44;
-  font-size: 11px;
-  font-weight: 400;
-}
-.terrain-pin-detail small {
-  font-size: 10px;
-  color: #496339;
-}
-.command-map-panel .terrain-pin.is-selected {
-  text-align: left;
-}
 .command-map-panel__scene {
   touch-action: pan-y;
 }
-@media(max-width:767px){.command-map-panel .terrain-pin-detail>span:nth-child(2){display:none}.command-map-panel .terrain-pin-detail{gap:3px;margin-top:5px;padding-top:5px}}
+/* Preserve the eight-panel cockpit while giving the three-dimensional map more room. */
+@media(min-width:1280px){
+  .production-command .command-grid{grid-template-columns:minmax(230px,17fr) minmax(0,63fr) minmax(275px,20fr);grid-template-rows:minmax(780px,calc(100dvh - 7rem)) 180px;height:auto;min-height:0}
+  .production-command .command-panel__header{flex-wrap:wrap}
+  .production-command .command-column--right{grid-template-rows:minmax(210px,.85fr) minmax(235px,1fr) minmax(290px,1.2fr)}
+  .production-command .command-gauge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(min-width:768px) and (max-width:1279px){.production-command .command-map-panel{min-height:46rem}}
+@media(max-width:767px){.production-command .command-map-panel{min-height:32rem}}
+.production-command .command-map-panel .scene-zone-marker{font-size:.7rem;padding:.3rem .48rem;gap:.32rem}
+.production-command .command-map-panel .scene-zone-card{width:13.6rem;padding:.6rem}
+.production-command .command-map-panel .scene-zone-card__name{font-size:.85rem}
+.production-command .command-map-panel .scene-zone-card__mode{font-size:.6rem}
+.production-command .command-map-panel .scene-zone-card__metrics small{font-size:.6rem}
+.production-command .command-map-panel .scene-zone-card__metrics strong{font-size:.78rem}
+.production-command .command-map-panel .scene-zone-card__metrics>span{padding:.28rem}
+.production-command .command-map-panel .scene-zone-card__metrics{gap:.3rem}
+.production-command .command-map-panel__scene{touch-action:pan-y}
+@media(max-width:767px){.production-command .command-map-panel .scene-zone-card{width:11rem;padding:.45rem}.production-command .command-map-panel .scene-zone-card__metrics strong{font-size:.7rem}.production-command .command-map-panel .scene-zone-marker{font-size:.65rem}}
+@media(min-width:1280px){.production-command .command-column--right{grid-template-rows:minmax(330px,1fr) minmax(260px,.85fr) minmax(340px,1.1fr)}.production-command .command-grid{grid-template-rows:minmax(960px,calc(100dvh - 7rem)) 180px}.production-command .command-weather-summary{grid-template-columns:1fr}.production-command .command-weather-summary__condition{flex-direction:row}.production-command .command-weather-summary__metrics{border-left:0;padding-left:0}.production-command .command-metric-row{grid-template-columns:18px 1fr auto}}
+
+@media(max-width:767px){.production-command .twin-map-fallback{--map-card-half:5.75rem}}
+@media(prefers-reduced-motion:reduce){.production-command .scene-zone-card.is-selected{animation:none;transition:none}}

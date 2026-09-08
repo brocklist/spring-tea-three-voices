@@ -1,4 +1,8 @@
-import { Grid, Html, Line, OrbitControls, useTexture } from "@react-three/drei";
+import { TeaSurfaceFoliage } from './TeaSurfaceFoliage';
+import { LandscapeMaterial } from './LandscapeMaterial';
+import { useOriginalTeaMountain } from '../../lib/originalTeaMountain';
+import { teaLandscape } from '../../data/teaLandscape';
+import { Html, OrbitControls } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   Component,
@@ -11,42 +15,19 @@ import {
   useState,
 } from "react";
 import {
-  BufferGeometry,
-  Float32BufferAttribute,
   Color,
   DoubleSide,
   PerspectiveCamera,
-  PlaneGeometry,
-  SRGBColorSpace,
   Vector3,
 } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import type { CameraPose, TeaGardenZone } from "../../types/domain";
 import { assetUrl } from "../../lib/assetUrl";
 
-const mapAsset = assetUrl("/assets/production/chunjian-tea-terrain-v3.png");
-const terrainSize = { width: 20, depth: 11.25 };
-const townshipBoundary: Array<[number, number]> = [
-  [-8.75, -3.4],
-  [-6.95, -4.55],
-  [-3.25, -4.92],
-  [0.65, -4.82],
-  [4.65, -4.32],
-  [8.35, -2.3],
-  [8.8, 0.9],
-  [7.05, 3.9],
-  [3.25, 4.88],
-  [-0.85, 4.72],
-  [-5.65, 4.2],
-  [-8.45, 1.72],
-  [-8.82, -1.35],
-  [-8.75, -3.4],
-];
-const overviewCameraPose: CameraPose = {
-  position: [14, 15, 18],
-  target: [0, 0.8, 0],
-  fov: 43,
-};
+const mapAsset = assetUrl(teaLandscape.fallbackImage);
+const terrainSize = { width: teaLandscape.width, depth: teaLandscape.depth };
+const overviewCameraPose: CameraPose = { position:[11,21,29], target:[0,1.8,0], fov:42 };
+const zonePoint = (zone:TeaGardenZone) => teaLandscape.zonePositions[zone.id] ?? [zone.position[0],zone.position[2]];
 interface ThreeTeaGardenSceneProps {
   zones: TeaGardenZone[];
   selectedZoneId: string;
@@ -60,38 +41,6 @@ interface SceneFallbackProps {
   zones: TeaGardenZone[];
   selectedZoneId: string;
   onZoneSelect: (zoneId: string) => void;
-}
-
-// Schematic elevation in scene units, aligned with the visible hills in the top-down artwork.
-// This mesh is real relief geometry; the image supplies only the surface color.
-function getTerrainHeight(x: number, z: number) {
-  const hill = (
-    cx: number,
-    cz: number,
-    height: number,
-    spreadX: number,
-    spreadZ: number,
-  ) => height * Math.exp(-((x - cx) ** 2 / spreadX + (z - cz) ** 2 / spreadZ));
-  const elevation =
-    0.32 +
-    hill(-6.5, -3.5, 3.1, 10, 5) +
-    hill(1.6, -3.7, 3.6, 12, 5) +
-    hill(7.2, -2.9, 2.9, 8, 6) +
-    hill(-6, 1.9, 2.4, 9, 5) +
-    hill(5.8, 1.4, 3.2, 8, 4) +
-    hill(-2.7, 4.6, 1.7, 6, 3);
-  // Terraced relief remains smooth enough for a continuous, stable textured surface.
-  return elevation + Math.sin(elevation * 22) * 0.045;
-}
-
-function getTownshipBoundaryPoints(
-  offset = 0.12,
-): Array<[number, number, number]> {
-  return townshipBoundary.map(([x, z]) => [
-    x,
-    getTerrainHeight(x, z) + offset,
-    z,
-  ]);
 }
 
 function supportsWebGL() {
@@ -121,18 +70,18 @@ function MapFallback({
       {zones.map((zone) => {
         const left = Math.min(
           88,
-          Math.max(12, 50 + (zone.position[0] / terrainSize.width) * 90),
+          Math.max(12, 50 + (zonePoint(zone)[0] / terrainSize.width) * 90),
         );
         const top = Math.min(
           86,
-          Math.max(14, 50 + (zone.position[2] / terrainSize.depth) * 80),
+          Math.max(14, 50 + (zonePoint(zone)[1] / terrainSize.depth) * 80),
         );
 
         return (
           <div
             key={zone.id}
             className="scene-zone-card-anchor--fallback"
-            style={{ left: `${left}%`, top: `${top}%` }}
+            style={{ left: zone.id === selectedZoneId ? `clamp(var(--map-card-half, 7rem), ${left}%, calc(100% - var(--map-card-half, 7rem)))` : `${left}%`, top: `${top}%`, zIndex: zone.id === selectedZoneId ? 15 : 8 }}
           >
             <ZonePin
               zone={zone}
@@ -159,142 +108,6 @@ class SceneErrorBoundary extends Component<
   render() {
     return this.state.failed ? this.props.fallback : this.props.children;
   }
-}
-
-function Terrain({ onReady }: { onReady: () => void }) {
-  const texture = useTexture(mapAsset);
-  const { gl } = useThree();
-  const geometry = useMemo(() => {
-    const nextGeometry = new PlaneGeometry(
-      terrainSize.width,
-      terrainSize.depth,
-      180,
-      104,
-    );
-    nextGeometry.rotateX(-Math.PI / 2);
-    const positions = nextGeometry.attributes.position;
-
-    for (let index = 0; index < positions.count; index += 1) {
-      positions.setY(
-        index,
-        getTerrainHeight(positions.getX(index), positions.getZ(index)),
-      );
-    }
-
-    positions.needsUpdate = true;
-    nextGeometry.computeVertexNormals();
-    return nextGeometry;
-  }, []);
-
-  const sides = useMemo(() => {
-    const vertices: number[] = [];
-    const steps = 120;
-    const edge = (x1: number, z1: number, x2: number, z2: number) => {
-      for (let i = 0; i < steps; i++) {
-        const t = i / steps,
-          u = (i + 1) / steps;
-        const ax = x1 + (x2 - x1) * t,
-          az = z1 + (z2 - z1) * t,
-          bx = x1 + (x2 - x1) * u,
-          bz = z1 + (z2 - z1) * u;
-        const ay = getTerrainHeight(ax, az),
-          by = getTerrainHeight(bx, bz);
-        vertices.push(
-          ax,
-          ay,
-          az,
-          ax,
-          -0.6,
-          az,
-          bx,
-          by,
-          bz,
-          bx,
-          by,
-          bz,
-          ax,
-          -0.6,
-          az,
-          bx,
-          -0.6,
-          bz,
-        );
-      }
-    };
-    const w = terrainSize.width / 2,
-      d = terrainSize.depth / 2;
-    edge(-w, -d, w, -d);
-    edge(w, -d, w, d);
-    edge(w, d, -w, d);
-    edge(-w, d, -w, -d);
-    const mesh = new BufferGeometry();
-    mesh.setAttribute("position", new Float32BufferAttribute(vertices, 3));
-    mesh.computeVertexNormals();
-    return mesh;
-  }, []);
-  useEffect(() => () => sides.dispose(), [sides]);
-
-  useLayoutEffect(() => {
-    texture.colorSpace = SRGBColorSpace;
-    texture.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
-    texture.needsUpdate = true;
-    onReady();
-  }, [gl, onReady, texture]);
-
-  useEffect(
-    () => () => {
-      geometry.dispose();
-      texture.dispose();
-      useTexture.clear(mapAsset);
-    },
-    [geometry, texture],
-  );
-
-  return (
-    <group>
-      <mesh geometry={sides}>
-        <meshStandardMaterial color="#56633c" roughness={1} side={DoubleSide} />
-      </mesh>
-      <mesh position={[0, -0.72, 0]}>
-        <boxGeometry args={[20.15, 0.24, 11.4]} />
-        <meshStandardMaterial color="#1d352b" roughness={0.85} />
-      </mesh>
-      <mesh geometry={geometry}>
-        <meshStandardMaterial
-          map={texture}
-          emissiveMap={texture}
-          color="#d4e7d9"
-          emissive="#b8ddca"
-          emissiveIntensity={0.11}
-          roughness={0.92}
-          metalness={0.02}
-          side={DoubleSide}
-        />
-      </mesh>
-      <mesh geometry={geometry} position={[0, 0.012, 0]}>
-        <meshBasicMaterial
-          color="#3d806a"
-          wireframe
-          transparent
-          opacity={0.025}
-          depthWrite={false}
-        />
-      </mesh>
-      <Grid
-        args={[terrainSize.width, terrainSize.depth]}
-        position={[0, -0.87, 0]}
-        cellSize={0.84}
-        cellThickness={0.1}
-        cellColor="#28614f"
-        sectionSize={4.2}
-        sectionThickness={0.18}
-        sectionColor="#5f9e87"
-        fadeDistance={21}
-        fadeStrength={1}
-        infiniteGrid={false}
-      />
-    </group>
-  );
 }
 
 function CameraController({
@@ -390,108 +203,28 @@ function CameraController({
       enablePan={false}
       enableDamping={false}
       minDistance={5.8}
-      maxDistance={38}
-      minPolarAngle={0.25}
-      maxPolarAngle={1.3}
+      maxDistance={180}
+      minPolarAngle={0.3}
+      maxPolarAngle={1.15}
       rotateSpeed={0.48}
       zoomSpeed={0.68}
     />
   );
 }
 
-function TownshipBoundary() {
-  const outerPoints = useMemo(() => getTownshipBoundaryPoints(0.11), []);
-  const labelPosition = useMemo<[number, number, number]>(() => {
-    const x = -7.7;
-    const z = -3.1;
-    return [x, getTerrainHeight(x, z) + 0.32, z];
-  }, []);
-
-  return (
-    <group>
-      <Line
-        points={outerPoints}
-        color="#91e8c7"
-        lineWidth={1.1}
-        transparent
-        opacity={0.62}
-      />
-      <Html position={labelPosition} distanceFactor={12} zIndexRange={[2, 0]}>
-        <div className="scene-boundary-label" aria-label="春建乡数字孪生范围">
-          <span>数字孪生范围</span>
-          <strong>春建乡</strong>
-        </div>
-      </Html>
-    </group>
-  );
+// Same marker and four-field information card as f21c899; keep one button mounted for keyboard focus.
+function ZonePin({zone,selected,onSelect}:{zone:TeaGardenZone;selected:boolean;onSelect:()=>void}) {
+ return <button type="button" onClick={event=>{event.stopPropagation();onSelect();}} className={selected?`scene-zone-card scene-zone-card--${zone.markerTone} is-selected`:`scene-zone-marker scene-zone-marker--${zone.markerTone}`} aria-pressed={selected} aria-label={selected?`${zone.name}，温度${zone.temperature}，空气湿度${zone.humidity}，土壤湿度${zone.soilMoisture}，状态${zone.status}`:`选择${zone.name}，当前状态${zone.status}`}>
+ {selected?<><span className="scene-zone-card__heading"><span className="scene-zone-card__name"><i aria-hidden="true"/>{zone.name}</span><span className="scene-zone-card__mode">当前选中</span></span><span className="scene-zone-card__metrics"><span><small>温度</small><strong>{zone.temperature}</strong></span><span><small>空气湿度</small><strong>{zone.humidity}</strong></span><span><small>土壤湿度</small><strong>{zone.soilMoisture}</strong></span><span><small>状态</small><strong>{zone.status}</strong></span></span></>:<><span className="scene-zone-marker__pulse"/><span className="scene-zone-marker__label">{zone.name}</span></>}
+ </button>;
 }
-
-function ZonePin({
-  zone,
-  selected,
-  onSelect,
-}: {
-  zone: TeaGardenZone;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`terrain-pin ${selected ? "is-selected" : ""}`}
-      aria-pressed={selected}
-      onClick={(event) => {
-        event.stopPropagation();
-        onSelect();
-      }}
-    >
-      <span>
-        <i />
-        {zone.name}
-      </span>
-      {selected && (
-        <span className="terrain-pin-detail">
-          <span>
-            {zone.temperature} · 湿度 {zone.humidity}
-          </span>
-          <span>
-            {zone.status} · {zone.area}
-          </span>
-          <small>演示片区数据</small>
-        </span>
-      )}
-    </button>
-  );
-}
-function ZoneMarker({
-  zone,
-  selected,
-  onSelect,
-}: {
-  zone: TeaGardenZone;
-  selected: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <group
-      position={[
-        zone.position[0],
-        getTerrainHeight(zone.position[0], zone.position[2]) + 0.16,
-        zone.position[2],
-      ]}
-    >
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.15, selected ? 0.28 : 0.21, 32]} />
-        <meshBasicMaterial
-          color={selected ? "#d4f483" : "#d4f5e3"}
-          side={DoubleSide}
-        />
-      </mesh>
-      <Html position={[0, 0.45, 0]} center zIndexRange={[8, 0]}>
-        <ZonePin zone={zone} selected={selected} onSelect={onSelect} />
-      </Html>
-    </group>
-  );
+function ZoneMarker({zone,selected,onSelect,height}:{zone:TeaGardenZone;selected:boolean;onSelect:()=>void;height:number}) {
+ const [x,z]=zonePoint(zone);
+ const color=zone.markerTone==='gold'?'#c9a75f':zone.markerTone==='cyan'?'#91e8c7':'#62ddb0';
+ return <group position={[x,height+.12,z]}>
+ <mesh rotation={[-Math.PI/2,0,0]}><ringGeometry args={selected?[.23,.3,40]:[.15,.2,32]}/><meshBasicMaterial color={color} transparent opacity={.85} side={DoubleSide}/></mesh>
+ <Html position={[0,selected?1.0:.65,0]} center zIndexRange={selected?[14,13]:[8,0]}><ZonePin zone={zone} selected={selected} onSelect={onSelect}/></Html>
+ </group>;
 }
 
 function TeaGardenWorld({
@@ -502,13 +235,21 @@ function TeaGardenWorld({
   onZoneSelect,
   onSceneReady,
 }: ThreeTeaGardenSceneProps) {
+  const {size}=useThree();
+  const model=useOriginalTeaMountain();
+  const heights=useMemo(()=>Object.fromEntries(zones.map(zone=>{const [x,z]=zonePoint(zone);return [zone.id,model.heightAt(x,z)];})),[model,zones]);
   const focusedZone = zones.find((zone) => zone.id === focusedZoneId);
   const focusPose = useMemo<CameraPose>(() => {
-    if (!focusedZone) return overviewCameraPose;
-    const [x, , z] = focusedZone.position;
-    const y = getTerrainHeight(x, z);
+    if (!focusedZone) {
+      const aspect=size.width/size.height;
+      const distance=Math.min(160, Math.max(48,48/aspect));
+      const direction=new Vector3(.27,.58,.77).normalize().multiplyScalar(distance);
+      return {position:[direction.x,direction.y+1.8,direction.z],target:[0,1.8,0],fov:42};
+    }
+    const [x,z] = zonePoint(focusedZone);
+    const y = heights[focusedZone.id];
     return { position: [x + 5.5, y + 7, z + 8], target: [x, y, z], fov: 43 };
-  }, [focusedZone]);
+  }, [focusedZone,size.width,size.height,heights]);
   const readySent = useRef(false);
   const handleReady = useCallback(() => {
     if (readySent.current) return;
@@ -516,15 +257,17 @@ function TeaGardenWorld({
     onSceneReady?.();
   }, [onSceneReady]);
 
+  useLayoutEffect(()=>handleReady(),[handleReady]);
   return (
     <>
       <color attach="background" args={[new Color("#06140f")]} />
 
-      <ambientLight intensity={0.95} color="#c9dfd0" />
+      <hemisphereLight intensity={1.2} color="#ecf3e2" groundColor="#5b6249" />
       <directionalLight
-        position={[-8, 12, 7]}
-        intensity={2.1}
-        color="#e6edd7"
+        position={[-12, 22, 10]}
+        intensity={2.5}
+        color="#fff0cf"
+        castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-20} shadow-camera-right={20} shadow-camera-top={20} shadow-camera-bottom={-20} shadow-camera-far={65} shadow-normalBias={0.045} shadow-bias={-0.0002}
       />
       <pointLight
         position={[4, 3, -2]}
@@ -533,13 +276,15 @@ function TeaGardenWorld({
         distance={11}
       />
       <Suspense fallback={null}>
-        <Terrain onReady={handleReady} />
+        <mesh geometry={model.geometry} castShadow receiveShadow><LandscapeMaterial vertexColors /></mesh>
+        <TeaSurfaceFoliage geometry={model.geometry} />
       </Suspense>
 
-      <TownshipBoundary />
+
       {zones.map((zone) => (
         <ZoneMarker
           key={zone.id}
+          height={heights[zone.id]}
           zone={zone}
           selected={zone.id === selectedZoneId}
           onSelect={() => onZoneSelect(zone.id)}
@@ -592,18 +337,19 @@ export function ThreeTeaGardenScene({
     <SceneErrorBoundary fallback={fallback}>
       <Canvas
         className="twin-canvas"
+        shadows
         camera={{
           position: overviewCameraPose.position,
           fov: overviewCameraPose.fov,
           near: 0.1,
-          far: 100,
+          far: 240,
         }}
         dpr={
-          typeof window !== "undefined" && window.innerWidth < 768 ? 0.8 : 1.1
+          typeof window !== "undefined" && window.innerWidth < 768 ? 1 : 1.35
         }
         frameloop={isVisible ? "demand" : "never"}
         gl={{
-          antialias: false,
+          antialias: true,
           alpha: false,
           powerPreference: "high-performance",
         }}
