@@ -198,8 +198,8 @@ export function MarketPage() {
       <WorkspaceDrawer
         open={selectedProduct !== null}
         title={selectedProduct?.name ?? "产品资料"}
-        theme="dark"
         onClose={() => setSelectedProduct(null)}
+        theme="dark"
       >
         {selectedProduct && (
           <div className="product-information">

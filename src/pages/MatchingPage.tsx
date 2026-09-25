@@ -173,7 +173,10 @@ export function MatchingPage() {
           </h1>
           <p>让青年创意遇见茶园资源，一起做成下一件事。</p>
         </div>
-        <span className="matching-edition">青年创意<br />茶园资源</span>
+        <span className="matching-edition">
+          青年创意<br />
+          茶园资源
+        </span>
       </header>
       <div className="matching-launches">
         <button onClick={() => openForm("project")}>
