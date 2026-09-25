@@ -35,7 +35,7 @@ export default function App() {
     ? 'site-theme-market'
     : location.pathname === '/matching'
       ? 'site-theme-matching'
-      : '';
+      : `site-theme-${location.pathname.slice(1) || 'intro'}`;
 
   return (
     <LayoutGroup id="tea-site-motion">

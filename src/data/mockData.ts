@@ -13,7 +13,8 @@ import type {
 import { assetUrl } from '../lib/assetUrl';
 
 export const heroAssets = {
-  production: assetUrl('/assets/market/tea-garden-aerial.jpg'),
+  production:
+    'https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=1800&q=85',
   market: assetUrl('/assets/market/tea-country-hero.jpg'),
   matching: assetUrl('/assets/market/collaboration.jpg'),
 };
