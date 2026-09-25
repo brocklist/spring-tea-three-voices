@@ -17,23 +17,41 @@ interface TopNavProps {
 export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { pathname } = useLocation();
-  const isProductionDashboard = pathname === '/production' && !careMode;
+  const isCommandPage = navItems.some((item) => item.to === pathname) && !careMode;
+  const activeSection = navItems.find((item) => item.to === pathname);
+  const sectionDescriptions: Record<string, string> = {
+    '/production': '面向茶农的天气、环境监测、病虫害识别与智能农事建议平台',
+    '/market': '春建茶品、品牌故事与茶乡影像',
+    '/matching': '连接青年创意与茶园资源的合作平台',
+  };
 
   const visibleNavItems = careMode ? navItems.slice(0, 1) : navItems;
 
-  if (isProductionDashboard) {
+  if (isCommandPage) {
     return (
       <header className="dashboard-site-header">
         <div className="dashboard-site-header__inner">
-          <NavLink to="/" className="dashboard-site-header__brand" aria-label="返回一叶问茶首焦动画">
-            <motion.div layoutId="tea-brand-title" className="brand-title brand-title--dashboard">
-              <span>一叶问茶<span className="brand-title__dot">·</span>春声三鸣</span><i aria-hidden="true">春建</i>
-            </motion.div>
-          </NavLink>
+          <div className="dashboard-site-header__identity">
+            <NavLink to="/" className="dashboard-site-header__brand" aria-label="返回一叶问茶首焦动画">
+              <motion.div layoutId="tea-brand-title" className="brand-title brand-title--dashboard">
+                <span>一叶问茶<span className="brand-title__dot">·</span>春声三鸣</span><i aria-hidden="true">春建</i>
+              </motion.div>
+            </NavLink>
+            <button
+              type="button"
+              className="dashboard-site-header__care"
+              aria-pressed={careMode}
+              aria-label="开启老年关怀模式"
+              title="老年关怀模式"
+              onClick={() => onCareModeChange(true)}
+            >
+              <HeartHandshake size={17} aria-hidden="true" />
+            </button>
+          </div>
 
           <div className="dashboard-site-header__title">
-            <h1>数智茶鸣｜智慧生产</h1>
-            <p>面向茶农的天气、环境监测、病虫害识别与智能农事建议平台</p>
+            <h1>{activeSection?.label}｜{activeSection?.subtitle}</h1>
+            <p>{sectionDescriptions[pathname]}</p>
           </div>
 
           <nav className="dashboard-site-header__nav" aria-label="主导航">
@@ -72,7 +90,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     [
       'flex min-w-0 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold transition xl:flex-row',
-      isProductionDashboard
+      isCommandPage
         ? isActive
           ? 'bg-tea-spring/22 text-white shadow-[0_0_24px_rgba(52,211,153,0.16)]'
           : 'text-white/66 hover:bg-white/10 hover:text-white'
@@ -86,16 +104,16 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
     <header
       className={[
         'sticky top-0 z-50 backdrop-blur-xl',
-        isProductionDashboard ? 'border-b border-emerald-200/10 bg-[#061510]/92' : 'border-b border-white/60 bg-[#f7fbf3]/84',
+        isCommandPage ? 'border-b border-emerald-200/10 bg-[#061510]/92' : 'border-b border-white/60 bg-[#f7fbf3]/84',
       ].join(' ')}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <NavLink to="/" className="flex min-w-0 items-center gap-3" aria-label="返回一叶问茶首焦动画">
-            <span className={['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-soft', isProductionDashboard ? 'bg-emerald-400/18 text-emerald-200' : 'bg-tea-ink'].join(' ')}>
+              <span className={['flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white shadow-soft', isCommandPage ? 'bg-emerald-400/18 text-emerald-200' : 'bg-tea-ink'].join(' ')}>
               <Sprout className="h-5 w-5" />
             </span>
-            <span className={['min-w-0 whitespace-nowrap text-base font-black tracking-[0.08em] sm:text-lg', isProductionDashboard ? 'text-white' : 'text-tea-leaf'].join(' ')}>一叶问茶·春声三鸣</span>
+            <span className={['min-w-0 whitespace-nowrap text-base font-black tracking-[0.08em] sm:text-lg', isCommandPage ? 'text-white' : 'text-tea-leaf'].join(' ')}>一叶问茶·春声三鸣</span>
           </NavLink>
 
           <button
@@ -106,7 +124,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
               'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-sm font-black transition',
               careMode
                 ? 'border-tea-leaf bg-tea-leaf text-white shadow-soft'
-                : isProductionDashboard
+                : isCommandPage
                   ? 'border-emerald-200/16 bg-white/6 text-emerald-100 hover:bg-white/12'
                   : 'border-tea-leaf/20 bg-white/80 text-tea-leaf hover:bg-tea-mist',
             ].join(' ')}
@@ -117,7 +135,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
           </button>
         </div>
 
-        <nav className={['hidden items-center rounded-2xl border p-1 md:grid', careMode ? 'grid-cols-1' : 'w-[min(42rem,52vw)] grid-cols-3', isProductionDashboard ? 'border-white/10 bg-white/5' : 'border-white/70 bg-white/64 shadow-sm'].join(' ')}>
+        <nav className={['hidden items-center rounded-2xl border p-1 md:grid', careMode ? 'grid-cols-1' : 'w-[min(42rem,52vw)] grid-cols-3', isCommandPage ? 'border-white/10 bg-white/5' : 'border-white/70 bg-white/64 shadow-sm'].join(' ')}>
           {visibleNavItems.map((item) => (
             <NavLink key={item.to} to={item.to} className={linkClass}>
               <span>{item.label}</span>
@@ -130,7 +148,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
         {!careMode ? (
           <button
             type="button"
-            className={['inline-flex h-10 w-10 items-center justify-center rounded-xl border md:hidden', isProductionDashboard ? 'border-white/12 bg-white/8 text-white' : 'border-tea-ink/10 bg-white text-tea-ink'].join(' ')}
+            className={['inline-flex h-10 w-10 items-center justify-center rounded-xl border md:hidden', isCommandPage ? 'border-white/12 bg-white/8 text-white' : 'border-tea-ink/10 bg-white text-tea-ink'].join(' ')}
             onClick={() => setIsOpen((value) => !value)}
             aria-label="切换导航"
           >
@@ -142,7 +160,7 @@ export function TopNav({ careMode, onCareModeChange }: TopNavProps) {
       </div>
 
       {isOpen && !careMode ? (
-        <nav className={['mx-4 mb-4 grid gap-2 rounded-2xl border p-3 md:hidden', isProductionDashboard ? 'border-white/10 bg-[#0a2119]/96 shadow-[0_20px_48px_rgba(0,0,0,0.32)]' : 'border-white/70 bg-white/88 shadow-soft'].join(' ')}>
+        <nav className={['mx-4 mb-4 grid gap-2 rounded-2xl border p-3 md:hidden', isCommandPage ? 'border-white/10 bg-[#0a2119]/96 shadow-[0_20px_48px_rgba(0,0,0,0.32)]' : 'border-white/70 bg-white/88 shadow-soft'].join(' ')}>
           {visibleNavItems.map((item) => (
             <NavLink key={item.to} to={item.to} className={linkClass} onClick={() => setIsOpen(false)}>
               {item.label}｜{item.subtitle}

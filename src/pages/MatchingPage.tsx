@@ -164,7 +164,7 @@ export function MatchingPage() {
     <div className="matching-workspace">
       <header className="matching-masthead">
         <div>
-          <p className="work-eyebrow">THE NEXT GROWTH / 新苗创鸣</p>
+          <p className="work-eyebrow">新苗创鸣 / 校企双选</p>
           <h1>
             好想法，
             <br className="mobile-break" />
@@ -174,8 +174,8 @@ export function MatchingPage() {
           <p>让青年创意遇见茶园资源，一起做成下一件事。</p>
         </div>
         <span className="matching-edition">
-          YOUTH ×<br />
-          TEA COUNTRY
+          青年创意<br />
+          茶园资源
         </span>
       </header>
       <div className="matching-launches">
@@ -540,7 +540,7 @@ function DialogWindow({
   onClose: () => void;
 }) {
   return (
-    <WorkspaceDrawer open={open} title={title} onClose={onClose}>
+    <WorkspaceDrawer open={open} title={title} onClose={onClose} theme="dark">
       <p className="drawer-description">
         {description} 资料仅保存在当前浏览器，材料仅记录文件名。
       </p>

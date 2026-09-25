@@ -13,12 +13,9 @@ import type {
 import { assetUrl } from '../lib/assetUrl';
 
 export const heroAssets = {
-  production:
-    'https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=1800&q=85',
-  market:
-    'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?auto=format&fit=crop&w=1800&q=85',
-  matching:
-    'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1800&q=85',
+  production: assetUrl('/assets/market/tea-garden-aerial.jpg'),
+  market: assetUrl('/assets/market/tea-country-hero.jpg'),
+  matching: assetUrl('/assets/market/collaboration.jpg'),
 };
 
 export const weatherMetrics: WeatherMetric[] = [
@@ -284,7 +281,7 @@ export const mediaAssets: MediaAsset[] = [
     id: 'drone',
     type: 'video',
     title: '茶园航拍影像',
-    coverUrl: 'https://images.unsplash.com/photo-1597318181409-cf64d0b5d8a2?auto=format&fit=crop&w=1200&q=82',
+    coverUrl: assetUrl('/assets/market/tea-garden-aerial.jpg'),
     url: assetUrl('/assets/placeholders/chunjian-drone.mp4'),
     description: '呈现春建乡茶园航拍、晨雾与采茶队伍等影像素材。',
   },
@@ -292,7 +289,7 @@ export const mediaAssets: MediaAsset[] = [
     id: 'craft',
     type: 'image',
     title: '手工制茶图文',
-    coverUrl: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=1200&q=82',
+    coverUrl: assetUrl('/assets/market/tea-craft.jpg'),
     url: assetUrl('/assets/placeholders/tea-craft.jpg'),
     description: '展示摊青、杀青、揉捻、干燥等工序，可替换为真实素材。',
   },
@@ -300,7 +297,7 @@ export const mediaAssets: MediaAsset[] = [
     id: 'culture',
     type: 'image',
     title: '茶文化传播素材',
-    coverUrl: 'https://images.unsplash.com/photo-1523920290228-4f321a939b4c?auto=format&fit=crop&w=1200&q=82',
+    coverUrl: assetUrl('/assets/market/tea-culture.jpg'),
     url: assetUrl('/assets/placeholders/tea-culture.jpg'),
     description: '串联品牌故事、节庆活动、非遗体验和茶席影像。',
   },

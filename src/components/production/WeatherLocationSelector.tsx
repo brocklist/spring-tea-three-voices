@@ -59,7 +59,7 @@ export function WeatherLocationSelector({ location, loading = false, error, comp
             天气地点
           </div>
           <p className="mt-3 text-2xl font-black text-tea-ink">{formatLocationName(location)}</p>
-          <p className="mt-1 text-sm font-semibold text-tea-ink/58">{loading ? '正在更新实时天气' : '已连接实时天气'}</p>
+          <p className="mt-1 text-sm font-semibold text-tea-ink/58">{loading ? '正在更新实时天气' : error ? '天气获取失败' : '实时天气已更新'}</p>
         </div>
         {compact ? (
           <button
@@ -78,6 +78,7 @@ export function WeatherLocationSelector({ location, loading = false, error, comp
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          aria-label="搜索天气地点"
           placeholder="输入地点，如 富阳、杭州、春建乡"
           className="min-h-12 flex-1 rounded-2xl border border-tea-ink/10 bg-[#f7fbf3] px-4 text-base font-semibold outline-none transition focus:border-tea-leaf focus:bg-white"
         />
