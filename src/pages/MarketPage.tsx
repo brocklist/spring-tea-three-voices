@@ -24,7 +24,7 @@ export function MarketPage() {
       <section className="editorial-hero">
         <div className="editorial-hero__copy">
           <p className="edition-label">
-            CHUNJIAN TEA JOURNAL <span>春建 · 茶事</span>
+            香途畅鸣 <span>春建 · 茶事</span>
           </p>
           <div className="editorial-seal">
             香途
@@ -57,7 +57,7 @@ export function MarketPage() {
       <section className="editorial-section" id="tea-collection">
         <header className="editorial-section-heading">
           <div>
-            <p className="edition-label">01 / THE COLLECTION</p>
+            <p className="edition-label">01 / 春茶好物</p>
             <h2>把春天，留在杯中</h2>
           </div>
           <p>
@@ -106,7 +106,7 @@ export function MarketPage() {
       <section className="editorial-stories">
         <header className="editorial-section-heading">
           <div>
-            <p className="edition-label">02 / PEOPLE & PLACE</p>
+            <p className="edition-label">02 / 人与风土</p>
             <h2>茶之外，还有故事</h2>
           </div>
           <p>一片叶，连接山野与人。</p>
@@ -131,7 +131,7 @@ export function MarketPage() {
             </a>
             <div>
               <p className="edition-label">
-                CHAPTER 0{index + 1} / {story.title}
+                茶乡故事 0{index + 1} / {story.title}
               </p>
               <h3>{story.subtitle.split("・")[0]}</h3>
               <p>{story.description}</p>
@@ -151,7 +151,7 @@ export function MarketPage() {
       <section className="editorial-section">
         <header className="editorial-section-heading">
           <div>
-            <p className="edition-label">03 / FIELD NOTES</p>
+            <p className="edition-label">03 / 茶乡影像</p>
             <h2>茶乡影像手记</h2>
           </div>
           <span>看见一杯茶的来处</span>
@@ -198,6 +198,7 @@ export function MarketPage() {
       <WorkspaceDrawer
         open={selectedProduct !== null}
         title={selectedProduct?.name ?? "产品资料"}
+        theme="dark"
         onClose={() => setSelectedProduct(null)}
       >
         {selectedProduct && (
